@@ -2,7 +2,10 @@
   <view class="page">
     <!-- 顶栏 -->
     <view class="nav" :style="{ paddingTop: statusBarHeight + 'px' }">
-      <view class="nav-inner">
+      <view
+        class="nav-inner"
+        :style="{ height: navBarHeight + 'px', paddingRight: menuRight + 'px' }"
+      >
         <view class="nav-left" @click="goHome">
           <text class="back-icon">‹</text>
         </view>
@@ -89,9 +92,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
+import { useNavBar } from '@/composables/useNavBar'
 
-const statusBarHeight = ref(20)
+const { statusBarHeight, navBarHeight, menuRight } = useNavBar()
 const categoryIndex = ref(0)
 const rankTabIndex = ref(0)
 
@@ -121,22 +125,19 @@ const thumbs = [
   '/static/rank/thumb-1.png',
   '/static/rank/thumb-2.png',
   '/static/rank/thumb-3.png',
-  '/static/rank/thumb-1-raw.png',
-  '/static/rank/thumb-2-raw.png',
-  '/static/rank/thumb-3-raw.png',
 ]
 
 const rankList = [
   { rank: 1, name: '多商户商城系统', price: '￥199-899元', sale: 28, score: 4.8, thumb: thumbs[0] },
   { rank: 2, name: '电商小程序系统', price: '￥199-699元', sale: 21, score: 4.7, thumb: thumbs[1] },
   { rank: 3, name: 'B2B2C电商平台', price: '￥299-999元', sale: 18, score: 4.6, thumb: thumbs[2] },
-  { rank: 4, name: '社交电商系统', price: '￥199-699元', sale: 16, score: 4.5, thumb: thumbs[3] },
-  { rank: 5, name: '跨境电商系统', price: '￥399-699元', sale: 14, score: 4.5, thumb: thumbs[4] },
-  { rank: 6, name: '生鲜配送系统', price: '￥199-599元', sale: 13, score: 4.4, thumb: thumbs[5] },
+  { rank: 4, name: '社交电商系统', price: '￥199-699元', sale: 16, score: 4.5, thumb: thumbs[0] },
+  { rank: 5, name: '跨境电商系统', price: '￥399-699元', sale: 14, score: 4.5, thumb: thumbs[1] },
+  { rank: 6, name: '生鲜配送系统', price: '￥199-599元', sale: 13, score: 4.4, thumb: thumbs[2] },
   { rank: 7, name: '会员积分商城', price: '￥199-499元', sale: 12, score: 4.3, thumb: thumbs[0] },
   { rank: 8, name: '直播带货系统', price: '￥299-799元', sale: 11, score: 4.3, thumb: thumbs[1] },
   { rank: 9, name: '批发订货系统', price: '￥199-399元', sale: 10, score: 4.2, thumb: thumbs[2] },
-  { rank: 10, name: '二手交易平台', price: '￥199-399元', sale: 9, score: 4.1, thumb: thumbs[3] },
+  { rank: 10, name: '二手交易平台', price: '￥199-399元', sale: 9, score: 4.1, thumb: thumbs[0] },
 ]
 
 const goHome = () => {
@@ -145,14 +146,9 @@ const goHome = () => {
 
 const openList = (item: { name: string; price: string; thumb: string }) => {
   uni.navigateTo({
-    url: `/pages/list/list?name=${encodeURIComponent(item.name)}&price=${encodeURIComponent(item.price)}&logo=${encodeURIComponent(item.thumb)}`,
+    url: `/packageGoods/list/list?name=${encodeURIComponent(item.name)}&price=${encodeURIComponent(item.price)}&logo=${encodeURIComponent(item.thumb)}`,
   })
 }
-
-onMounted(() => {
-  const sys = uni.getSystemInfoSync()
-  statusBarHeight.value = sys.statusBarHeight || 20
-})
 </script>
 
 <style scoped>
@@ -176,10 +172,10 @@ onMounted(() => {
 }
 
 .nav-inner {
-  height: 88rpx;
   display: flex;
   align-items: center;
-  padding: 0 24rpx;
+  padding-left: 24rpx;
+  box-sizing: border-box;
 }
 
 .nav-left,

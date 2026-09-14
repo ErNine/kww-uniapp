@@ -1,9 +1,12 @@
 <template>
   <view class="page">
     <view class="nav" :style="{ paddingTop: statusBarHeight + 'px' }">
-      <view class="nav-inner">
+      <view
+        class="nav-inner"
+        :style="{ height: navBarHeight + 'px', paddingRight: menuRight + 'px' }"
+      >
         <view class="nav-left" @click="goBack">
-          <image class="back-icon" src="/static/shop/icon-back.png" mode="aspectFit" />
+          <image class="back-icon" src="../static/shop/icon-back.png" mode="aspectFit" />
         </view>
         <text class="nav-title">坑位商主页</text>
         <view class="nav-right" />
@@ -13,7 +16,7 @@
     <scroll-view class="scroll" scroll-y :show-scrollbar="false">
       <!-- 头部 -->
       <view class="header">
-        <image class="header-bg" src="/static/shop/header-bg.png" mode="aspectFill" />
+        <image class="header-bg" src="../static/shop/header-bg.png" mode="aspectFill" />
         <view class="profile">
           <image class="avatar" :src="shop.avatar" mode="aspectFill" />
           <view class="profile-main">
@@ -26,13 +29,13 @@
                 <text class="tag-auth-text">企业认证</text>
               </view>
               <view class="follow-btn">
-                <image class="follow-icon" src="/static/shop/icon-follow.png" mode="aspectFit" />
+                <image class="follow-icon" src="../static/shop/icon-follow.png" mode="aspectFit" />
                 <text class="follow-text">关注店铺</text>
               </view>
             </view>
             <view class="company-row">
               <text class="company">{{ shop.company }}</text>
-              <image class="check-icon" src="/static/shop/icon-check.png" mode="aspectFit" />
+              <image class="check-icon" src="../static/shop/icon-check.png" mode="aspectFit" />
             </view>
             <text class="desc">{{ shop.desc }}</text>
           </view>
@@ -41,7 +44,7 @@
         <view class="stats-card">
           <view class="stat">
             <view class="stat-head">
-              <image class="stat-icon" src="/static/shop/icon-bag.png" mode="aspectFit" />
+              <image class="stat-icon" src="../static/shop/icon-bag.png" mode="aspectFit" />
               <text class="stat-label">在售坑位</text>
             </view>
             <view class="stat-num-row">
@@ -52,7 +55,7 @@
           <view class="stat-divider" />
           <view class="stat">
             <view class="stat-head">
-              <image class="stat-icon shield" src="/static/shop/icon-shield.png" mode="aspectFit" />
+              <image class="stat-icon shield" src="../static/shop/icon-shield.png" mode="aspectFit" />
               <text class="stat-label">保证金额度</text>
             </view>
             <view class="stat-num-row">
@@ -63,14 +66,14 @@
           <view class="stat-divider" />
           <view class="stat like-stat">
             <view class="stat-head">
-              <image class="stat-icon" src="/static/shop/icon-like.png" mode="aspectFit" />
+              <image class="stat-icon" src="../static/shop/icon-like.png" mode="aspectFit" />
               <text class="stat-label">点赞数</text>
             </view>
             <view class="like-row">
               <text class="stat-num">{{ shop.likes }}</text>
               <view class="like-btn">
                 <text class="like-btn-text">点赞</text>
-                <image class="like-btn-icon" src="/static/shop/icon-like-btn.png" mode="aspectFit" />
+                <image class="like-btn-icon" src="../static/shop/icon-like-btn.png" mode="aspectFit" />
               </view>
             </view>
           </view>
@@ -80,11 +83,11 @@
       <!-- 列表区 -->
       <view class="content">
         <view class="notice">
-          <image class="notice-icon" src="/static/shop/icon-notice.png" mode="aspectFit" />
+          <image class="notice-icon" src="../static/shop/icon-notice.png" mode="aspectFit" />
           <text class="notice-title">店铺公告</text>
           <view class="notice-vline" />
           <text class="notice-text">本店所有坑位均为正规授权，售后无忧，放心购买!</text>
-          <image class="notice-arrow" src="/static/shop/icon-chevron.png" mode="aspectFit" />
+          <image class="notice-arrow" src="../static/shop/icon-chevron.png" mode="aspectFit" />
         </view>
 
         <view class="cat-row">
@@ -102,7 +105,7 @@
             </view>
           </scroll-view>
           <view class="filter-entry">
-            <image class="filter-icon" src="/static/shop/icon-filter.png" mode="aspectFit" />
+            <image class="filter-icon" src="../static/shop/icon-filter.png" mode="aspectFit" />
             <text class="filter-text">筛选</text>
           </view>
         </view>
@@ -110,7 +113,7 @@
         <view class="sort-row">
           <view class="sort-default">
             <text class="sort-default-text">默认排序</text>
-            <image class="sort-caret" src="/static/shop/icon-caret.png" mode="aspectFit" />
+            <image class="sort-caret" src="../static/shop/icon-caret.png" mode="aspectFit" />
           </view>
           <text
             v-for="(s, idx) in sortOptions"
@@ -121,7 +124,7 @@
           >{{ s }}</text>
           <view class="stock-only">
             <text class="stock-text">仅看有货</text>
-            <image class="switch-img" src="/static/shop/icon-switch.png" mode="aspectFit" />
+            <image class="switch-img" src="../static/shop/icon-switch.png" mode="aspectFit" />
           </view>
         </view>
 
@@ -181,10 +184,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
+import { useNavBar } from '@/composables/useNavBar'
 
-const statusBarHeight = ref(20)
+const { statusBarHeight, navBarHeight, menuRight } = useNavBar()
 const catIndex = ref(0)
 const sortIndex = ref(-1)
 
@@ -192,7 +196,7 @@ const shop = reactive({
   name: '软件超人',
   company: '河北微脉云网络科技有限公司',
   desc: '专注电商系统服务，提供稳定、安全、售后无忧的坑位服务',
-  avatar: '/static/shop/avatar.png',
+  avatar: '../static/shop/avatar.png',
   slots: '28',
   deposit: '50,000',
   likes: '5680+',
@@ -207,8 +211,8 @@ const products = [
     desc: '开源商城系统，支持多端小程序、H5、公众号、APP',
     price: '199',
     sold: '已售1280+',
-    thumb: '/static/shop/product-1.png',
-    logo: '/static/shop/product-1-logo.png',
+    thumb: '../static/shop/product-1.png',
+    logo: '../static/shop/product-1-logo.png',
     thumbLabel: 'EWEISHOP',
   },
   {
@@ -216,8 +220,8 @@ const products = [
     desc: '多商户入驻，支持多端，功能强大',
     price: '299',
     sold: '已售860+',
-    thumb: '/static/shop/product-2.png',
-    logo: '/static/shop/product-2-logo.png',
+    thumb: '../static/shop/product-2.png',
+    logo: '../static/shop/product-2-logo.png',
     thumbLabel: 'UNIAPP',
   },
   {
@@ -225,8 +229,8 @@ const products = [
     desc: '外卖、跑腿、团购，拼团等功能',
     price: '159',
     sold: '已售760+',
-    thumb: '/static/shop/product-3.png',
-    logo: '/static/shop/product-3-logo.png',
+    thumb: '../static/shop/product-3.png',
+    logo: '../static/shop/product-3-logo.png',
     thumbLabel: '同城系统',
   },
 ]
@@ -234,14 +238,14 @@ const products = [
 const goBack = () => {
   uni.navigateBack({
     fail: () => {
-      uni.navigateTo({ url: '/pages/detail/detail' })
+      uni.navigateTo({ url: '/packageGoods/detail/detail' })
     },
   })
 }
 
 const openDetail = (item: { title: string; price: string }) => {
   uni.navigateTo({
-    url: `/pages/detail/detail?title=${encodeURIComponent(item.title)}&price=${encodeURIComponent(item.price)}&name=${encodeURIComponent(shop.name)}&avatar=${encodeURIComponent(shop.avatar)}`,
+    url: `/packageGoods/detail/detail?title=${encodeURIComponent(item.title)}&price=${encodeURIComponent(item.price)}&name=${encodeURIComponent(shop.name)}&avatar=${encodeURIComponent(shop.avatar)}`,
   })
 }
 
@@ -252,11 +256,6 @@ onLoad((query) => {
   if (query?.avatar) {
     shop.avatar = decodeURIComponent(query.avatar)
   }
-})
-
-onMounted(() => {
-  const sys = uni.getSystemInfoSync()
-  statusBarHeight.value = sys.statusBarHeight || 20
 })
 </script>
 
@@ -275,10 +274,10 @@ onMounted(() => {
 }
 
 .nav-inner {
-  height: 88rpx;
   display: flex;
   align-items: center;
-  padding: 0 24rpx;
+  padding-left: 24rpx;
+  box-sizing: border-box;
 }
 
 .nav-left,
@@ -539,7 +538,7 @@ onMounted(() => {
   background: #fff;
   border-radius: 24rpx 24rpx 0 0;
   padding: 24rpx 28rpx 0;
-  min-height: 60vh;
+  min-height: 800rpx;
 }
 
 .notice {

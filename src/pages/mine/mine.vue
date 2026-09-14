@@ -10,18 +10,20 @@
 
 <style scoped>
 .placeholder {
-  min-height: 60vh;
+  min-height: 100%;
+  padding: 240rpx 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16rpx;
+  box-sizing: border-box;
 }
 
 .title {
   font-size: 36rpx;
   font-weight: 700;
   color: #333;
+  margin-bottom: 16rpx;
 }
 
 .desc {

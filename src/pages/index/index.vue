@@ -2,9 +2,12 @@
   <view class="page">
     <view class="status-bar" :style="{ height: statusBarHeight + 'px' }" />
 
-    <!-- 顶部：品牌 + 搜索 -->
+    <!-- 顶部：品牌 + 搜索（品牌行右侧避开胶囊） -->
     <view class="header">
-      <view class="brand-row">
+      <view
+        class="brand-row"
+        :style="{ height: navBarHeight + 'px', paddingRight: menuRight + 'px' }"
+      >
         <text class="brand">坑位网</text>
       </view>
 
@@ -259,9 +262,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
+import { useNavBar } from '@/composables/useNavBar'
 
-const statusBarHeight = ref(20)
+const { statusBarHeight, navBarHeight, menuRight } = useNavBar()
 const merchantTabIndex = ref(0)
 const newsTabIndex = ref(0)
 
@@ -380,10 +384,6 @@ const newsList = [
   },
 ]
 
-onMounted(() => {
-  const sys = uni.getSystemInfoSync()
-  statusBarHeight.value = sys.statusBarHeight || 20
-})
 </script>
 
 <style scoped>
@@ -402,13 +402,16 @@ onMounted(() => {
 
 .header {
   background: #fff;
-  padding: 8rpx 28rpx 20rpx;
+  padding: 0 0 20rpx;
+  box-sizing: border-box;
 }
 
 .brand-row {
   display: flex;
   align-items: center;
-  margin-bottom: 18rpx;
+  padding-left: 28rpx;
+  margin-bottom: 12rpx;
+  box-sizing: border-box;
 }
 
 .brand {
@@ -422,6 +425,8 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 16rpx;
+  padding: 0 28rpx;
+  box-sizing: border-box;
 }
 
 .search-box {

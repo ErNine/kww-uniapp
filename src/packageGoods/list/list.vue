@@ -1,9 +1,12 @@
 <template>
   <view class="page">
     <view class="nav" :style="{ paddingTop: statusBarHeight + 'px' }">
-      <view class="nav-inner">
+      <view
+        class="nav-inner"
+        :style="{ height: navBarHeight + 'px', paddingRight: menuRight + 'px' }"
+      >
         <view class="nav-left" @click="goBack">
-          <image class="back-icon" src="/static/list/icon-back.png" mode="aspectFit" />
+          <image class="back-icon" src="../static/list/icon-back.png" mode="aspectFit" />
         </view>
         <text class="nav-title">坑位网-软件坑位列表</text>
         <view class="nav-right" />
@@ -23,7 +26,7 @@
               </view>
             </view>
             <view class="fav">
-              <image class="fav-icon" src="/static/list/icon-fav.png" mode="aspectFit" />
+              <image class="fav-icon" src="../static/list/icon-fav.png" mode="aspectFit" />
               <text class="fav-text">收藏</text>
             </view>
           </view>
@@ -39,7 +42,7 @@
             <text class="stat-unit">万</text>
           </view>
           <text class="stat-label">浏览量</text>
-          <image class="stat-icon" src="/static/list/icon-eye.png" mode="aspectFit" />
+          <image class="stat-icon" src="../static/list/icon-eye.png" mode="aspectFit" />
         </view>
         <view class="stat-card">
           <text class="stat-num score">{{ product.score }}</text>
@@ -48,7 +51,7 @@
               v-for="n in 5"
               :key="n"
               class="star"
-              :src="`/static/list/star-${n}.png`"
+              :src="`../static/list/star-${n}.png`"
               mode="aspectFit"
             />
           </view>
@@ -62,7 +65,7 @@
             <text class="stat-unit">家</text>
           </view>
           <text class="stat-label">在售坑位商</text>
-          <image class="stat-icon" src="/static/list/icon-shop.png" mode="aspectFit" />
+          <image class="stat-icon" src="../static/list/icon-shop.png" mode="aspectFit" />
         </view>
       </view>
 
@@ -71,12 +74,12 @@
         <view class="price-left">
           <view class="price-label-row">
             <text class="price-label">参考价格区间</text>
-            <image class="info-icon" src="/static/list/icon-info.png" mode="aspectFit" />
+            <image class="info-icon" src="../static/list/icon-info.png" mode="aspectFit" />
           </view>
           <view class="price-range">
             <text class="yen">¥</text>
             <text class="price-val">{{ product.priceMin }}</text>
-            <image class="tilde" src="/static/list/icon-tilde.png" mode="aspectFit" />
+            <image class="tilde" src="../static/list/icon-tilde.png" mode="aspectFit" />
             <text class="yen">¥</text>
             <text class="price-val">{{ product.priceMax }}</text>
             <text class="price-unit">/年</text>
@@ -84,15 +87,15 @@
         </view>
         <view class="quick-links">
           <view class="quick-item kb">
-            <image class="quick-icon" src="/static/list/icon-kb.png" mode="aspectFit" />
+            <image class="quick-icon" src="../static/list/icon-kb.png" mode="aspectFit" />
             <text class="quick-text kb-t">知识库</text>
           </view>
           <view class="quick-item case">
-            <image class="quick-icon" src="/static/list/icon-case.png" mode="aspectFit" />
+            <image class="quick-icon" src="../static/list/icon-case.png" mode="aspectFit" />
             <text class="quick-text case-t">案例库</text>
           </view>
           <view class="quick-item chat">
-            <image class="quick-icon chat-icon" src="/static/list/icon-chat.png" mode="aspectFit" />
+            <image class="quick-icon chat-icon" src="../static/list/icon-chat.png" mode="aspectFit" />
             <text class="quick-text chat-t">群聊</text>
           </view>
         </view>
@@ -114,14 +117,14 @@
             <image
               v-if="sortIndex === idx"
               class="sort-arrow"
-              src="/static/list/icon-sort-arrow.png"
+              src="../static/list/icon-sort-arrow.png"
               mode="aspectFit"
             />
             <view v-if="idx < sortTabs.length - 1" class="sort-divider" />
           </view>
           <view class="filter-btn">
             <view class="filter-vline" />
-            <image class="filter-icon" src="/static/list/icon-filter.png" mode="aspectFit" />
+            <image class="filter-icon" src="../static/list/icon-filter.png" mode="aspectFit" />
             <text class="filter-btn-text">筛选</text>
           </view>
         </view>
@@ -134,7 +137,7 @@
               @click="sortIndex = idx"
             >
               <text class="chip-text">{{ chip }}</text>
-              <image class="chip-caret" src="/static/list/icon-caret.png" mode="aspectFit" />
+              <image class="chip-caret" src="../static/list/icon-caret.png" mode="aspectFit" />
             </view>
           </view>
         </scroll-view>
@@ -168,7 +171,7 @@
           <view class="merchant-bottom">
             <view class="merchant-meta">
               <view class="meta-item">
-                <image class="meta-icon" src="/static/list/icon-like.png" mode="aspectFit" />
+                <image class="meta-icon" src="../static/list/icon-like.png" mode="aspectFit" />
                 <view class="meta-texts">
                   <text class="meta-val">{{ item.likes }}</text>
                   <text class="meta-key">点赞量</text>
@@ -176,7 +179,7 @@
               </view>
               <view class="meta-divider" />
               <view class="meta-item">
-                <image class="meta-icon" src="/static/list/icon-slot.png" mode="aspectFit" />
+                <image class="meta-icon" src="../static/list/icon-slot.png" mode="aspectFit" />
                 <view class="meta-texts">
                   <text class="meta-val">{{ item.slots }}个</text>
                   <text class="meta-key">在售坑位</text>
@@ -184,7 +187,7 @@
               </view>
               <view class="meta-divider" />
               <view class="meta-item">
-                <image class="meta-icon" src="/static/list/icon-clock.png" mode="aspectFit" />
+                <image class="meta-icon" src="../static/list/icon-clock.png" mode="aspectFit" />
                 <view class="meta-texts">
                   <text class="meta-val">{{ item.refresh }}</text>
                   <text class="meta-key">最近刷新</text>
@@ -206,15 +209,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
+import { useNavBar } from '@/composables/useNavBar'
 
-const statusBarHeight = ref(20)
+const { statusBarHeight, navBarHeight, menuRight } = useNavBar()
 const sortIndex = ref(0)
 
 const product = reactive({
   name: 'Eweishop商城',
-  logo: '/static/list/product-logo.png',
+  logo: '../static/list/product-logo.png',
   desc: '专注于为开发者提供高效、稳定的商城系统服务\n支持多端小程序、H5、公众号、APP等',
   views: '12.6',
   score: '4.8',
@@ -229,7 +233,7 @@ const sortChips = ['按点赞量排序', '按价格排序', '按保证金高低�
 const merchants = [
   {
     name: '软件超人',
-    logo: '/static/list/merchant-1.png',
+    logo: '../static/list/merchant-1.png',
     auth: '企业认证',
     deposit: '500元保证金',
     likes: 1280,
@@ -239,7 +243,7 @@ const merchants = [
   },
   {
     name: 'Eweishop商城',
-    logo: '/static/list/merchant-2.png',
+    logo: '../static/list/merchant-2.png',
     auth: '企业认证',
     deposit: '800元保证金',
     likes: 860,
@@ -249,7 +253,7 @@ const merchants = [
   },
   {
     name: '坑位联盟',
-    logo: '/static/list/merchant-3.png',
+    logo: '../static/list/merchant-3.png',
     auth: '企业认证',
     deposit: '1000元保证金',
     likes: 620,
@@ -259,7 +263,7 @@ const merchants = [
   },
   {
     name: '迅软科技',
-    logo: '/static/list/merchant-4.png',
+    logo: '../static/list/merchant-4.png',
     auth: '企业认证',
     deposit: '300元保证金',
     likes: 320,
@@ -279,7 +283,7 @@ const goBack = () => {
 
 const openDetail = (item: { name: string; logo: string; price: string }) => {
   uni.navigateTo({
-    url: `/pages/detail/detail?name=${encodeURIComponent(item.name)}&avatar=${encodeURIComponent(item.logo)}&price=${encodeURIComponent(item.price)}`,
+    url: `/packageGoods/detail/detail?name=${encodeURIComponent(item.name)}&avatar=${encodeURIComponent(item.logo)}&price=${encodeURIComponent(item.price)}`,
   })
 }
 
@@ -299,17 +303,12 @@ onLoad((query) => {
     }
   }
 })
-
-onMounted(() => {
-  const sys = uni.getSystemInfoSync()
-  statusBarHeight.value = sys.statusBarHeight || 20
-})
 </script>
 
 <style scoped>
 /* Figma 画布 1152 → rpx: n * 750 / 1152 */
 .page {
-  min-height: 100%;
+  height: 100%;
   background: #fff;
   display: flex;
   flex-direction: column;
@@ -322,10 +321,10 @@ onMounted(() => {
 }
 
 .nav-inner {
-  height: 88rpx;
   display: flex;
   align-items: center;
-  padding: 0 24rpx;
+  padding-left: 24rpx;
+  box-sizing: border-box;
 }
 
 .nav-left,

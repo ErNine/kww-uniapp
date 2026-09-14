@@ -1,14 +1,19 @@
 <template>
   <view class="page">
     <view class="nav" :style="{ paddingTop: statusBarHeight + 'px' }">
-      <view class="nav-inner">
+      <view
+        class="nav-inner"
+        :style="{ height: navBarHeight + 'px', paddingRight: menuRight + 'px' }"
+      >
         <view class="nav-left" @click="goBack">
-          <image class="back-icon" src="/static/detail/icon-back.png" mode="aspectFit" />
+          <image class="back-icon" src="../static/detail/icon-back.png" mode="aspectFit" />
         </view>
         <text class="nav-title">坑位详情</text>
         <view class="nav-right">
-          <image class="nav-icon" src="/static/detail/icon-fav.png" mode="aspectFit" />
-          <image class="nav-icon" src="/static/detail/icon-share.png" mode="aspectFit" />
+          <image class="nav-icon" src="../static/detail/icon-fav.png" mode="aspectFit" />
+          <!-- #ifndef MP-WEIXIN -->
+          <image class="nav-icon" src="../static/detail/icon-share.png" mode="aspectFit" />
+          <!-- #endif -->
         </view>
       </view>
     </view>
@@ -39,7 +44,7 @@
               <text class="price">{{ detail.price }}</text>
               <text class="price-suffix">起</text>
             </view>
-            <image class="star-icon" src="/static/detail/icon-fav.png" mode="aspectFit" />
+            <image class="star-icon" src="../static/detail/icon-fav.png" mode="aspectFit" />
           </view>
         </view>
       </view>
@@ -57,17 +62,17 @@
             </view>
             <view class="company-row">
               <text class="company">{{ detail.merchant.company }}</text>
-              <image class="chevron-sm" src="/static/detail/icon-chevron-sm.png" mode="aspectFit" />
+              <image class="chevron-sm" src="../static/detail/icon-chevron-sm.png" mode="aspectFit" />
             </view>
           </view>
           <view class="enter-btn" @click="openShop">
             <text class="enter-text">进店看看</text>
-            <image class="chevron" src="/static/detail/icon-chevron.png" mode="aspectFit" />
+            <image class="chevron" src="../static/detail/icon-chevron.png" mode="aspectFit" />
           </view>
         </view>
         <view class="merchant-stats">
           <view class="m-stat">
-            <image class="m-stat-icon" src="/static/detail/icon-bag.png" mode="aspectFit" />
+            <image class="m-stat-icon" src="../static/detail/icon-bag.png" mode="aspectFit" />
             <view class="m-stat-texts">
               <text class="m-stat-val">{{ detail.merchant.slots }}</text>
               <text class="m-stat-key">在售坑位</text>
@@ -75,7 +80,7 @@
           </view>
           <view class="m-divider" />
           <view class="m-stat">
-            <image class="m-stat-icon shield" src="/static/detail/icon-shield.png" mode="aspectFit" />
+            <image class="m-stat-icon shield" src="../static/detail/icon-shield.png" mode="aspectFit" />
             <view class="m-stat-texts">
               <text class="m-stat-val">{{ detail.merchant.deposit }}</text>
               <text class="m-stat-key">保证金额度</text>
@@ -83,7 +88,7 @@
           </view>
           <view class="m-divider" />
           <view class="m-stat">
-            <image class="m-stat-icon" src="/static/detail/icon-like.png" mode="aspectFit" />
+            <image class="m-stat-icon" src="../static/detail/icon-like.png" mode="aspectFit" />
             <view class="m-stat-texts">
               <text class="m-stat-val">{{ detail.merchant.likes }}</text>
               <text class="m-stat-key">点赞数</text>
@@ -136,11 +141,11 @@
     <view class="bottom-bar" :style="{ paddingBottom: safeBottom + 'px' }">
       <view class="bottom-actions">
         <view class="side-action">
-          <image class="side-icon" src="/static/detail/icon-service.png" mode="aspectFit" />
+          <image class="side-icon" src="../static/detail/icon-service.png" mode="aspectFit" />
           <text class="side-text">客服</text>
         </view>
         <view class="side-action" @click="openShop">
-          <image class="side-icon" src="/static/detail/icon-store.png" mode="aspectFit" />
+          <image class="side-icon" src="../static/detail/icon-store.png" mode="aspectFit" />
           <text class="side-text">店铺</text>
         </view>
         <view class="btn-sell">
@@ -155,20 +160,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
-import { onLoad } from '@dcloudio/uni-app'
+import { ref, reactive } from 'vue'
+import { onLoad, onShareAppMessage } from '@dcloudio/uni-app'
+import { useNavBar } from '@/composables/useNavBar'
 
-const statusBarHeight = ref(20)
-const safeBottom = ref(0)
+const { statusBarHeight, navBarHeight, menuRight, safeBottom } = useNavBar()
 const bannerIndex = ref(0)
 const tabIndex = ref(0)
 
 const banners = [
-  '/static/detail/banner.png',
-  '/static/detail/banner.png',
-  '/static/detail/banner.png',
-  '/static/detail/banner.png',
-  '/static/detail/banner.png',
+  '../static/detail/banner.png',
+  '../static/detail/banner.png',
+  '../static/detail/banner.png',
+  '../static/detail/banner.png',
+  '../static/detail/banner.png',
 ]
 
 const detail = reactive({
@@ -178,7 +183,7 @@ const detail = reactive({
   merchant: {
     name: '软件超人',
     company: '河北微脉云网络科技有限公司',
-    avatar: '/static/detail/merchant-avatar.png',
+    avatar: '../static/detail/merchant-avatar.png',
     slots: '1000+',
     deposit: '￥50,000',
     likes: '4.9万',
@@ -190,38 +195,38 @@ const detail = reactive({
 const tabs = ['坑位介绍', '坑位演示', '坑位案例', '用户评价(368)']
 
 const featureTags = [
-  { name: '多端适配', icon: '/static/detail/tag-multi.png' },
-  { name: '开源系统', icon: '/static/detail/tag-opensource.png' },
-  { name: '功能丰富', icon: '/static/detail/tag-feature.png' },
-  { name: '二开灵活', icon: '/static/detail/tag-dev.png' },
-  { name: '持续更新', icon: '/static/detail/tag-update.png' },
+  { name: '多端适配', icon: '../static/detail/tag-multi.png' },
+  { name: '开源系统', icon: '../static/detail/tag-opensource.png' },
+  { name: '功能丰富', icon: '../static/detail/tag-feature.png' },
+  { name: '二开灵活', icon: '../static/detail/tag-dev.png' },
+  { name: '持续更新', icon: '../static/detail/tag-update.png' },
 ]
 
 const specRows = [
   {
     label: '适用场景',
     value: '电商零售、分销商城、社区团购、跨境电商等',
-    icon: '/static/detail/spec-scene.png',
+    icon: '../static/detail/spec-scene.png',
   },
   {
     label: '可用时长',
     value: '12个月起',
-    icon: '/static/detail/spec-duration.png',
+    icon: '../static/detail/spec-duration.png',
   },
   {
     label: '更新维护',
     value: '永久免费更新',
-    icon: '/static/detail/spec-maintain.png',
+    icon: '../static/detail/spec-maintain.png',
   },
   {
     label: '技术支持',
     value: '7x12小时在线支持',
-    icon: '/static/detail/spec-support.png',
+    icon: '../static/detail/spec-support.png',
   },
   {
     label: '数据安全',
     value: '自动备份，安全稳定',
-    icon: '/static/detail/spec-security.png',
+    icon: '../static/detail/spec-security.png',
   },
 ]
 
@@ -232,14 +237,14 @@ const onBannerChange = (e: { detail: { current: number } }) => {
 const goBack = () => {
   uni.navigateBack({
     fail: () => {
-      uni.navigateTo({ url: '/pages/list/list' })
+      uni.navigateTo({ url: '/packageGoods/list/list' })
     },
   })
 }
 
 const openShop = () => {
   uni.navigateTo({
-    url: `/pages/shop/shop?name=${encodeURIComponent(detail.merchant.name)}&avatar=${encodeURIComponent(detail.merchant.avatar)}`,
+    url: `/packageGoods/shop/shop?name=${encodeURIComponent(detail.merchant.name)}&avatar=${encodeURIComponent(detail.merchant.avatar)}`,
   })
 }
 
@@ -258,11 +263,12 @@ onLoad((query) => {
   }
 })
 
-onMounted(() => {
-  const sys = uni.getSystemInfoSync()
-  statusBarHeight.value = sys.statusBarHeight || 20
-  safeBottom.value = (sys as { safeAreaInsets?: { bottom?: number } }).safeAreaInsets?.bottom || 0
-})
+// #ifdef MP-WEIXIN
+onShareAppMessage(() => ({
+  title: detail.title,
+  path: `/packageGoods/detail/detail?title=${encodeURIComponent(detail.title)}&price=${encodeURIComponent(detail.price)}&name=${encodeURIComponent(detail.merchant.name)}`,
+}))
+// #endif
 </script>
 
 <style scoped>
@@ -280,10 +286,10 @@ onMounted(() => {
 }
 
 .nav-inner {
-  height: 88rpx;
   display: flex;
   align-items: center;
-  padding: 0 24rpx;
+  padding-left: 24rpx;
+  box-sizing: border-box;
 }
 
 .nav-left {
@@ -306,7 +312,7 @@ onMounted(() => {
 }
 
 .nav-right {
-  width: 120rpx;
+  min-width: 72rpx;
   display: flex;
   align-items: center;
   justify-content: flex-end;

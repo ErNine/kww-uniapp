@@ -23,4 +23,11 @@ uni-page-body {
   height: 100%;
 }
 /* #endif */
+
+/* #ifdef MP-WEIXIN */
+/* 避免小程序端图片默认点击态、长按菜单干扰 */
+image {
+  -webkit-touch-callout: none;
+}
+/* #endif */
 </style>
