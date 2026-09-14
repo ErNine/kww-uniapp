@@ -13,13 +13,14 @@ onHide(() => {
 <style>
 page {
   background-color: #f5f7fb;
+  height: 100%;
   box-sizing: border-box;
 }
 
 /* #ifdef H5 */
 uni-page-body {
   background-color: #f5f7fb;
-  /* 不要写死 height:100%，否则会盖住原生 tabBar */
+  height: 100%;
 }
 /* #endif */
 </style>
