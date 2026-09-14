@@ -11,8 +11,9 @@
 		{
 			"path": "pages/rank/rank",
 			"style": {
+				"navigationStyle": "custom",
 				"navigationBarTitleText": "坑位榜",
-				"backgroundColor": "#F5F7FB"
+				"backgroundColor": "#FFFFFF"
 			}
 		},
 		{
