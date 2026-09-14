@@ -1,0 +1,84 @@
+{
+	"pages": [
+		{
+			"path": "pages/index/index",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "坑位网",
+				"backgroundColor": "#F5F7FB"
+			}
+		},
+		{
+			"path": "pages/rank/rank",
+			"style": {
+				"navigationBarTitleText": "坑位榜",
+				"backgroundColor": "#F5F7FB"
+			}
+		},
+		{
+			"path": "pages/order/order",
+			"style": {
+				"navigationBarTitleText": "甩单群",
+				"backgroundColor": "#F5F7FB"
+			}
+		},
+		{
+			"path": "pages/merchant/merchant",
+			"style": {
+				"navigationBarTitleText": "坑位商",
+				"backgroundColor": "#F5F7FB"
+			}
+		},
+		{
+			"path": "pages/mine/mine",
+			"style": {
+				"navigationBarTitleText": "我的",
+				"backgroundColor": "#F5F7FB"
+			}
+		}
+	],
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "坑位网",
+		"navigationBarBackgroundColor": "#FFFFFF",
+		"backgroundColor": "#F5F7FB"
+	},
+	"tabBar": {
+		"color": "#8A91A0",
+		"selectedColor": "#104FFB",
+		"backgroundColor": "#FFFFFF",
+		"borderStyle": "black",
+		"list": [
+			{
+				"pagePath": "pages/index/index",
+				"text": "首页",
+				"iconPath": "static/tab/home.png",
+				"selectedIconPath": "static/tab/home-active.png"
+			},
+			{
+				"pagePath": "pages/rank/rank",
+				"text": "坑位榜",
+				"iconPath": "static/tab/rank.png",
+				"selectedIconPath": "static/tab/rank-active.png"
+			},
+			{
+				"pagePath": "pages/order/order",
+				"text": "甩单群",
+				"iconPath": "static/tab/order.png",
+				"selectedIconPath": "static/tab/order-active.png"
+			},
+			{
+				"pagePath": "pages/merchant/merchant",
+				"text": "坑位商",
+				"iconPath": "static/tab/merchant.png",
+				"selectedIconPath": "static/tab/merchant-active.png"
+			},
+			{
+				"pagePath": "pages/mine/mine",
+				"text": "我的",
+				"iconPath": "static/tab/mine.png",
+				"selectedIconPath": "static/tab/mine-active.png"
+			}
+		]
+	}
+}
