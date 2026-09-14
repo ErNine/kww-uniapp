@@ -17,6 +17,14 @@
 			}
 		},
 		{
+			"path": "pages/list/list",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "软件坑位列表",
+				"backgroundColor": "#F5F7FB"
+			}
+		},
+		{
 			"path": "pages/order/order",
 			"style": {
 				"navigationBarTitleText": "甩单群",

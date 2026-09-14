@@ -52,6 +52,7 @@
           v-for="item in rankList"
           :key="item.rank"
           class="rank-item"
+          @click="openList(item)"
         >
           <view class="rank-badge" :class="'r' + item.rank">
             <text class="rank-num">{{ item.rank }}</text>
@@ -140,6 +141,12 @@ const rankList = [
 
 const goHome = () => {
   uni.switchTab({ url: '/pages/index/index' })
+}
+
+const openList = (item: { name: string; price: string; thumb: string }) => {
+  uni.navigateTo({
+    url: `/pages/list/list?name=${encodeURIComponent(item.name)}&price=${encodeURIComponent(item.price)}&logo=${encodeURIComponent(item.thumb)}`,
+  })
 }
 
 onMounted(() => {
