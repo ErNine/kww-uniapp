@@ -25,6 +25,22 @@
 			}
 		},
 		{
+			"path": "pages/detail/detail",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "坑位详情",
+				"backgroundColor": "#F5F6F8"
+			}
+		},
+		{
+			"path": "pages/shop/shop",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "坑位商主页",
+				"backgroundColor": "#F5F6F8"
+			}
+		},
+		{
 			"path": "pages/order/order",
 			"style": {
 				"navigationBarTitleText": "甩单群",

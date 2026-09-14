@@ -145,6 +145,7 @@
         v-for="item in merchants"
         :key="item.name"
         class="merchant"
+        @click="openDetail(item)"
       >
         <image class="merchant-logo" :src="item.logo" mode="aspectFill" />
         <view class="merchant-main">
@@ -273,6 +274,12 @@ const goBack = () => {
     fail: () => {
       uni.switchTab({ url: '/pages/rank/rank' })
     },
+  })
+}
+
+const openDetail = (item: { name: string; logo: string; price: string }) => {
+  uni.navigateTo({
+    url: `/pages/detail/detail?name=${encodeURIComponent(item.name)}&avatar=${encodeURIComponent(item.logo)}&price=${encodeURIComponent(item.price)}`,
   })
 }
 
