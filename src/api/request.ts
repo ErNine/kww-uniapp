@@ -17,7 +17,7 @@ export class ApiError extends Error {
 export interface RequestOptions {
   /** 相对 /app 的路径，如 /portal/home */
   url: string
-  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
   data?: Record<string, unknown> | unknown
   query?: Record<string, unknown>
   header?: Record<string, string>
