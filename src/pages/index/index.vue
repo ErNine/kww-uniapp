@@ -12,11 +12,11 @@
       </view>
 
       <view class="search-row">
-        <view class="search-box">
+        <view class="search-box" @tap="onSearch">
           <image class="search-icon" src="/static/home/icon-search-glass.png" mode="aspectFit" />
           <text class="search-placeholder">搜索坑位、坑位商、行业关键词</text>
         </view>
-        <view class="search-btn">
+        <view class="search-btn" @tap="onSearch">
           <text class="search-btn-text">搜索</text>
         </view>
       </view>
@@ -24,7 +24,7 @@
 
     <view class="scroll">
       <!-- 公告 -->
-      <view class="notice">
+      <view class="notice" @tap="onNotice">
         <image class="notice-icon" src="/static/home/icon-notice.png" mode="aspectFit" />
         <text class="notice-label">公告</text>
         <view class="notice-divider" />
@@ -33,7 +33,7 @@
       </view>
 
       <!-- Banner -->
-      <view class="banner">
+      <view class="banner" @tap="goRank">
         <image class="banner-bg" src="/static/home/banner.png" mode="aspectFill" />
         <view class="banner-content">
           <text class="banner-title">找坑位，上坑位网</text>
@@ -53,22 +53,37 @@
 
       <!-- 快捷入口 -->
       <view class="category-row">
-        <view v-for="item in categories" :key="item.name" class="category-item">
+        <view
+          v-for="item in categories"
+          :key="item.name"
+          class="category-item"
+          @tap="onCategoryTap(item)"
+        >
           <image class="category-img" :src="item.icon" mode="aspectFit" />
         </view>
       </view>
 
       <!-- 双 CTA -->
       <view class="cta-row">
-        <image class="cta-card" src="/static/home/cta-publish.png" mode="aspectFill" />
-        <image class="cta-card" src="/static/home/cta-settle.png" mode="aspectFill" />
+        <image
+          class="cta-card"
+          src="/static/home/cta-publish.png"
+          mode="aspectFill"
+          @tap="onPublish"
+        />
+        <image
+          class="cta-card"
+          src="/static/home/cta-settle.png"
+          mode="aspectFill"
+          @tap="onSettle"
+        />
       </view>
 
       <!-- 坑位热榜 -->
       <view class="section card">
         <view class="section-head">
           <text class="section-title">坑位热榜</text>
-          <view class="more">
+          <view class="more" @tap="goRank">
             <text class="more-text">查看更多</text>
             <text class="more-arrow">›</text>
           </view>
@@ -83,6 +98,7 @@
               v-for="(item, idx) in retailHot"
               :key="item.name"
               class="hot-item"
+              @tap="openGoodsList(item.name)"
             >
               <view class="rank" :class="'rank-' + (idx + 1)">
                 <text class="rank-text">{{ idx + 1 }}</text>
@@ -90,7 +106,7 @@
               <text class="hot-name">{{ item.name }}</text>
               <text class="hot-heat">{{ item.heat }}</text>
             </view>
-            <view class="hot-footer">
+            <view class="hot-footer" @tap="goRank">
               <text class="hot-footer-text">查看完整榜单</text>
             </view>
           </view>
@@ -102,6 +118,7 @@
               v-for="(item, idx) in foodHot"
               :key="item.name"
               class="hot-item"
+              @tap="openGoodsList(item.name)"
             >
               <view class="rank" :class="'rank-' + (idx + 1)">
                 <text class="rank-text">{{ idx + 1 }}</text>
@@ -109,7 +126,7 @@
               <text class="hot-name">{{ item.name }}</text>
               <text class="hot-heat">{{ item.heat }}</text>
             </view>
-            <view class="hot-footer">
+            <view class="hot-footer" @tap="goRank">
               <text class="hot-footer-text">查看完整榜单</text>
             </view>
           </view>
@@ -127,7 +144,7 @@
       <view class="section card">
         <view class="section-head">
           <text class="section-title">坑位商榜单</text>
-          <view class="more">
+          <view class="more" @tap="goMerchant">
             <text class="more-text">查看更多</text>
             <text class="more-arrow">›</text>
           </view>
@@ -152,6 +169,7 @@
           v-for="(item, idx) in merchants"
           :key="item.name"
           class="merchant-item"
+          @tap="openShop(item)"
         >
           <view class="merchant-rank" :class="'m-rank-' + (idx + 1)">
             <text class="merchant-rank-text">{{ idx + 1 }}</text>
@@ -176,7 +194,7 @@
               <text class="popularity">人气值{{ item.popularity }}</text>
             </view>
           </view>
-          <view class="enter-btn">
+          <view class="enter-btn" @tap.stop="openShop(item)">
             <text class="enter-btn-text">进店</text>
           </view>
         </view>
@@ -186,7 +204,7 @@
       <view class="section card">
         <view class="section-head">
           <text class="section-title">新品上市</text>
-          <view class="more">
+          <view class="more" @tap="goRank">
             <text class="more-text">查看更多</text>
             <text class="more-arrow">›</text>
           </view>
@@ -205,7 +223,12 @@
           <view class="timeline-line" />
         </view>
         <view class="new-grid">
-          <view v-for="item in newProducts" :key="item.name" class="new-item">
+          <view
+            v-for="item in newProducts"
+            :key="item.name"
+            class="new-item"
+            @tap="openGoodsList(item.name)"
+          >
             <image class="new-icon" :src="item.icon" mode="aspectFit" />
             <text class="new-name">{{ item.name }}</text>
             <text class="new-desc">{{ item.desc }}</text>
@@ -217,7 +240,7 @@
       <view class="section card news-section">
         <view class="section-head">
           <text class="section-title">最新资讯</text>
-          <view class="more">
+          <view class="more" @tap="openNewsList">
             <text class="more-text">查看更多</text>
             <text class="more-arrow">›</text>
           </view>
@@ -238,7 +261,12 @@
             </view>
           </view>
         </scroll-view>
-        <view v-for="item in newsList" :key="item.title" class="news-item">
+        <view
+          v-for="item in filteredNews"
+          :key="item.id"
+          class="news-item"
+          @tap="openNews(item)"
+        >
           <view class="news-thumb" :style="{ background: item.gradient }">
             <text class="news-thumb-title">{{ item.thumbTitle }}</text>
           </view>
@@ -262,20 +290,86 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useNavBar } from '@/composables/useNavBar'
+import { NEWS_LIST, type NewsItem } from '@/pages/news/data'
 
 const { statusBarHeight, navBarHeight, menuRight } = useNavBar()
 const merchantTabIndex = ref(0)
 const newsTabIndex = ref(0)
 
-const categories = [
-  { name: '坑位榜', icon: '/static/home/cat-rank.png' },
-  { name: '坑位商', icon: '/static/home/cat-merchant.png' },
-  { name: '甩单群', icon: '/static/home/cat-order.png' },
-  { name: '案例库', icon: '/static/home/cat-case.png' },
-  { name: '申请收录', icon: '/static/home/cat-apply.png' },
+type CategoryItem = {
+  name: string
+  icon: string
+  tabUrl?: string
+  action?: 'toast'
+  toast?: string
+}
+
+const categories: CategoryItem[] = [
+  { name: '坑位榜', icon: '/static/home/cat-rank.png', tabUrl: '/pages/rank/rank' },
+  { name: '坑位商', icon: '/static/home/cat-merchant.png', tabUrl: '/pages/merchant/merchant' },
+  { name: '互助大厅', icon: '/static/home/cat-order.png', tabUrl: '/pages/order/order' },
+  { name: '案例库', icon: '/static/home/cat-case.png', action: 'toast', toast: '案例库即将上线' },
+  { name: '申请收录', icon: '/static/home/cat-apply.png', action: 'toast', toast: '申请收录即将上线' },
 ]
+
+function onCategoryTap(item: CategoryItem) {
+  if (item.tabUrl) {
+    uni.switchTab({ url: item.tabUrl })
+    return
+  }
+  if (item.action === 'toast') {
+    uni.showToast({ title: item.toast || '敬请期待', icon: 'none' })
+  }
+}
+
+function goRank() {
+  uni.switchTab({ url: '/pages/rank/rank' })
+}
+
+function goMerchant() {
+  uni.switchTab({ url: '/pages/merchant/merchant' })
+}
+
+function onSearch() {
+  uni.showToast({ title: '搜索功能即将上线', icon: 'none' })
+}
+
+function onNotice() {
+  uni.showToast({ title: '平台严打虚假信息，交易更安全', icon: 'none' })
+}
+
+function onPublish() {
+  uni.navigateTo({ url: '/packageGoods/publish/publish' })
+}
+
+function onSettle() {
+  uni.showToast({ title: '坑位商入驻即将上线', icon: 'none' })
+}
+
+function openGoodsList(name: string) {
+  uni.navigateTo({
+    url: `/packageGoods/list/list?name=${encodeURIComponent(name)}`,
+  })
+}
+
+function openShop(item: { name: string; logo: string }) {
+  uni.navigateTo({
+    url: `/packageGoods/shop/shop?name=${encodeURIComponent(item.name)}&avatar=${encodeURIComponent(item.logo)}`,
+  })
+}
+
+function openNews(item?: NewsItem) {
+  const id = item?.id || NEWS_LIST[0]?.id || '1'
+  uni.navigateTo({
+    url: `/pages/news/detail?id=${encodeURIComponent(id)}`,
+  })
+}
+
+function openNewsList() {
+  uni.navigateTo({ url: '/pages/news/list' })
+}
 
 const retailHot = [
   { name: '多用户商城系统', heat: '9.9w' },
@@ -353,37 +447,13 @@ const newProducts = [
 ]
 
 const newsTabs = ['全部', '平台动态', '行业趋势', '坑位干货', '成功案例']
+const newsList = NEWS_LIST
 
-const newsList = [
-  {
-    title: '2024年SaaS行业发展趋势报告',
-    thumbTitle: '2024年\nSaaS行业\n发展趋势报告',
-    gradient: 'linear-gradient(135deg, #4F8CFF 0%, #2F5BFF 100%)',
-    tags: ['行业趋势', 'SaaS', '市场分析'],
-    source: '坑位网官方',
-    time: '2小时前',
-    views: '1234阅读',
-  },
-  {
-    title: '如何选择优质的坑位商？5大维度帮你避坑',
-    thumbTitle: '如何选择\n优质的坑位商？\n5大维度帮你避坑',
-    gradient: 'linear-gradient(135deg, #FF9F43 0%, #FF6B35 100%)',
-    tags: ['坑位干货', '避坑指南', '运营技巧'],
-    source: '坑位网官方',
-    time: '5小时前',
-    views: '2345阅读',
-  },
-  {
-    title: '成功案例：月入百万的外卖平台搭建方案',
-    thumbTitle: '成功案例：\n月入百万的外卖\n平台搭建方案',
-    gradient: 'linear-gradient(135deg, #A78BFA 0%, #4F46E5 100%)',
-    tags: ['成功案例', '餐饮外卖', '平台搭建'],
-    source: '坑位网官方',
-    time: '1天前',
-    views: '3456阅读',
-  },
-]
-
+const filteredNews = computed(() => {
+  const tab = newsTabs[newsTabIndex.value]
+  if (!tab || tab === '全部') return newsList
+  return newsList.filter((item) => item.tags.includes(tab))
+})
 </script>
 
 <style scoped>

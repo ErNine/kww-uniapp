@@ -19,21 +19,40 @@
 		{
 			"path": "pages/order/order",
 			"style": {
-				"navigationBarTitleText": "甩单群",
-				"backgroundColor": "#F5F7FB"
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "互助大厅",
+				"backgroundColor": "#FFFFFF"
 			}
 		},
 		{
 			"path": "pages/merchant/merchant",
 			"style": {
+				"navigationStyle": "custom",
 				"navigationBarTitleText": "坑位商",
-				"backgroundColor": "#F5F7FB"
+				"backgroundColor": "#F8FBFE"
 			}
 		},
 		{
 			"path": "pages/mine/mine",
 			"style": {
+				"navigationStyle": "custom",
 				"navigationBarTitleText": "我的",
+				"backgroundColor": "#F5F7FB"
+			}
+		},
+		{
+			"path": "pages/news/detail",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "资讯详情",
+				"backgroundColor": "#F5F7FB"
+			}
+		},
+		{
+			"path": "pages/news/list",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "最新资讯",
 				"backgroundColor": "#F5F7FB"
 			}
 		}
@@ -64,6 +83,22 @@
 						"navigationStyle": "custom",
 						"navigationBarTitleText": "坑位商主页",
 						"backgroundColor": "#F5F6F8"
+					}
+				},
+				{
+					"path": "manage/manage",
+					"style": {
+						"navigationStyle": "custom",
+						"navigationBarTitleText": "商品管理",
+						"backgroundColor": "#FAFBFC"
+					}
+				},
+				{
+					"path": "publish/publish",
+					"style": {
+						"navigationStyle": "custom",
+						"navigationBarTitleText": "发布商品",
+						"backgroundColor": "#F5F7FB"
 					}
 				}
 			]
@@ -105,7 +140,7 @@
 			},
 			{
 				"pagePath": "pages/order/order",
-				"text": "甩单群",
+				"text": "互助大厅",
 				"iconPath": "static/tab/order.png",
 				"selectedIconPath": "static/tab/order-active.png"
 			},
