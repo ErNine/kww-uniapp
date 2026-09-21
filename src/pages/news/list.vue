@@ -15,7 +15,7 @@
 
     <scroll-view class="scroll" scroll-y :show-scrollbar="false">
       <view
-        v-for="item in NEWS_LIST"
+        v-for="item in list"
         :key="item.id"
         class="news-item"
         @tap="openNews(item.id)"
@@ -41,10 +41,29 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted, ref } from 'vue'
 import { useNavBar } from '@/composables/useNavBar'
-import { NEWS_LIST } from './data'
+import { NEWS_LIST, type NewsItem } from './data'
+import { cmsApi } from '@/api'
 
 const { statusBarHeight, navBarHeight, menuRight } = useNavBar()
+const list = ref<NewsItem[]>([...NEWS_LIST])
+
+onMounted(async () => {
+  const rows = await cmsApi.articlesSilent({ limit: 20 })
+  if (!rows?.length) return
+  list.value = rows.map((a) => ({
+    id: String(a.id),
+    title: a.title,
+    thumbTitle: a.thumb_title || a.title,
+    gradient: a.gradient || 'linear-gradient(135deg, #4F8CFF 0%, #2F5BFF 100%)',
+    tags: a.tags || [],
+    source: a.source || '坑位网官方',
+    time: String(a.published_at || a.time || ''),
+    views: a.view_count != null ? `${a.view_count}阅读` : String(a.views || ''),
+    paragraphs: a.paragraphs || (a.summary ? [a.summary] : []),
+  }))
+})
 
 function goBack() {
   uni.navigateBack({

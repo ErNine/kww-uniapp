@@ -11,7 +11,7 @@
         </view>
         <text class="nav-title">坑位网-坑位榜</text>
         <view class="nav-right">
-          <image class="nav-search" src="/static/home/icon-search-glass.png" mode="aspectFit" />
+          <image class="nav-search" src="/static/home/icon-search-glass.png" mode="aspectFit" @click="openSearch" />
         </view>
       </view>
     </view>
@@ -92,14 +92,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useNavBar } from '@/composables/useNavBar'
+import { categoryApi, rankApi, type CategoryItem, type ProductItem } from '@/api'
 
 const { statusBarHeight, navBarHeight, menuRight } = useNavBar()
 const categoryIndex = ref(0)
 const rankTabIndex = ref(0)
 
-const categories = [
+type CatRow = { id?: string | number; name: string; icon: string; more?: boolean }
+
+const categories = ref<CatRow[]>([
   { name: '全部分类', icon: '▦' },
   { name: '电商平台', icon: '🛒' },
   { name: '社交平台', icon: '💬' },
@@ -112,13 +115,13 @@ const categories = [
   { name: '游戏应用', icon: '🎮' },
   { name: 'AI人工智能', icon: '🤖' },
   { name: '更多分类', icon: '＋', more: true },
-]
+])
 
 const rankTabs = [
-  { name: '人气榜', icon: '🔥' },
-  { name: '评分榜', icon: '⭐' },
-  { name: '在售榜', icon: '📊' },
-  { name: '新上榜', icon: '🆕' },
+  { name: '人气榜', icon: '🔥', type: 'hot' },
+  { name: '评分榜', icon: '⭐', type: 'score' },
+  { name: '在售榜', icon: '📊', type: 'listing' },
+  { name: '新上榜', icon: '🆕', type: 'new' },
 ]
 
 const thumbs = [
@@ -127,7 +130,17 @@ const thumbs = [
   '/static/rank/thumb-3.png',
 ]
 
-const rankList = [
+type RankRow = {
+  id?: string | number
+  rank: number
+  name: string
+  price: string
+  sale: number
+  score: number
+  thumb: string
+}
+
+const mockList: RankRow[] = [
   { rank: 1, name: '多商户商城系统', price: '￥199-899元', sale: 28, score: 4.8, thumb: thumbs[0] },
   { rank: 2, name: '电商小程序系统', price: '￥199-699元', sale: 21, score: 4.7, thumb: thumbs[1] },
   { rank: 3, name: 'B2B2C电商平台', price: '￥299-999元', sale: 18, score: 4.6, thumb: thumbs[2] },
@@ -140,14 +153,60 @@ const rankList = [
   { rank: 10, name: '二手交易平台', price: '￥199-399元', sale: 9, score: 4.1, thumb: thumbs[0] },
 ]
 
+const rankList = ref<RankRow[]>([...mockList])
+
+function mapProduct(item: ProductItem, idx: number): RankRow {
+  return {
+    id: item.id,
+    rank: idx + 1,
+    name: item.name,
+    price: item.reference_price != null ? `￥${item.reference_price}` : '面议',
+    sale: Number(item.listing_count ?? 0),
+    score: Number(item.score ?? item.hot_score ?? 4.5) / (item.score ? 1 : 20) || 4.5,
+    thumb: item.logo || thumbs[idx % 3],
+  }
+}
+
+async function loadRank() {
+  const cat = categories.value[categoryIndex.value]
+  const type = rankTabs[rankTabIndex.value]?.type || 'hot'
+  const list = await rankApi.productsSilent({
+    category_id: cat?.id,
+    type,
+    limit: 20,
+  })
+  if (list?.length) rankList.value = list.map(mapProduct)
+}
+
+onMounted(async () => {
+  const cats = await categoryApi.listSilent()
+  if (cats?.length) {
+    categories.value = [
+      { name: '全部分类', icon: '▦' },
+      ...cats.map((c: CategoryItem) => ({ id: c.id, name: c.name, icon: c.icon || '▪' })),
+    ]
+  }
+  await loadRank()
+})
+
+watch([categoryIndex, rankTabIndex], () => { void loadRank() })
+
 const goHome = () => {
   uni.switchTab({ url: '/pages/index/index' })
 }
 
-const openList = (item: { name: string; price: string; thumb: string }) => {
-  uni.navigateTo({
-    url: `/packageGoods/list/list?name=${encodeURIComponent(item.name)}&price=${encodeURIComponent(item.price)}&logo=${encodeURIComponent(item.thumb)}`,
-  })
+const openSearch = () => {
+  uni.navigateTo({ url: '/pages/search/search' })
+}
+
+const openList = (item: RankRow) => {
+  const qs = [
+    item.id ? `id=${encodeURIComponent(String(item.id))}` : '',
+    `name=${encodeURIComponent(item.name)}`,
+    `price=${encodeURIComponent(item.price)}`,
+    `logo=${encodeURIComponent(item.thumb)}`,
+  ].filter(Boolean).join('&')
+  uni.navigateTo({ url: `/packageGoods/list/list?${qs}` })
 }
 </script>
 

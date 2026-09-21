@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { onLaunch, onShow, onHide } from "@dcloudio/uni-app";
+import { ensureLogin } from "@/api";
+
 onLaunch(() => {
-  console.log("App Launch");
+  void ensureLogin();
 });
 onShow(() => {
-  console.log("App Show");
+  // noop
 });
 onHide(() => {
-  console.log("App Hide");
+  // noop
 });
 </script>
 <style>

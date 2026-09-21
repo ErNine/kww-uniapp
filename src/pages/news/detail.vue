@@ -58,8 +58,26 @@ import { getNewsById, type NewsItem } from './data'
 const { statusBarHeight, navBarHeight, menuRight } = useNavBar()
 const news = ref<NewsItem>(getNewsById())
 
-onLoad((query) => {
-  news.value = getNewsById(query?.id ? String(query.id) : undefined)
+onLoad(async (query) => {
+  const id = query?.id ? String(query.id) : undefined
+  news.value = getNewsById(id)
+  if (!id) return
+  const { cmsApi } = await import('@/api')
+  const row = await cmsApi.articleSilent(id)
+  if (!row) return
+  news.value = {
+    id: String(row.id),
+    title: row.title,
+    thumbTitle: row.thumb_title || row.title,
+    gradient: row.gradient || news.value.gradient,
+    tags: row.tags || [],
+    source: row.source || '坑位网官方',
+    time: String(row.published_at || row.time || ''),
+    views: row.view_count != null ? `${row.view_count}阅读` : String(row.views || ''),
+    paragraphs:
+      row.paragraphs ||
+      (row.content ? String(row.content).split(/\n+/).filter(Boolean) : row.summary ? [row.summary] : news.value.paragraphs),
+  }
 })
 
 function goBack() {

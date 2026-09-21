@@ -9,20 +9,20 @@
     <view class="content">
       <!-- 用户信息 -->
       <view class="profile">
-        <image class="avatar" src="/static/mine/avatar.png" mode="aspectFill" />
+        <image class="avatar" :src="displayAvatar" mode="aspectFill" />
         <view class="profile-main">
           <view class="name-row">
-            <text class="name">川仔</text>
+            <text class="name">{{ displayName }}</text>
             <view class="user-tag">
               <image class="user-tag-icon" src="/static/mine/icon-user-tag.png" mode="aspectFit" />
               <text class="user-tag-text">普通用户</text>
             </view>
           </view>
           <view class="id-row" @click="copyId">
-            <text class="user-id">ID:K20250818001</text>
+            <text class="user-id">ID:{{ displayId }}</text>
             <image class="copy-icon" src="/static/mine/icon-copy.png" mode="aspectFit" />
           </view>
-          <text class="bio">专注小程序开发，做有价值的产品</text>
+          <text class="bio">{{ displayBio }}</text>
         </view>
       </view>
 
@@ -197,11 +197,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useNavBar } from '@/composables/useNavBar'
+import { ensureLogin, type UserProfile } from '@/api'
 
 const { statusBarHeight, navBarHeight } = useNavBar()
 const balanceVisible = ref(true)
+const profile = ref<UserProfile | null>(null)
+const displayName = ref('川仔')
+const displayId = ref('K20250818001')
+const displayBio = ref('专注小程序开发，做有价值的产品')
+const displayAvatar = ref('/static/mine/avatar.png')
 
 const orderItems = [
   {
@@ -301,7 +307,7 @@ function toggleBalance() {
 
 function copyId() {
   uni.setClipboardData({
-    data: 'K20250818001',
+    data: displayId.value,
     success: () => {
       uni.showToast({ title: '已复制', icon: 'none' })
     },
@@ -309,11 +315,11 @@ function copyId() {
 }
 
 function onRecharge() {
-  uni.showToast({ title: '充值', icon: 'none' })
+  uni.showToast({ title: '充值功能暂未开放', icon: 'none' })
 }
 
 function onOpenMember() {
-  uni.showToast({ title: '开通会员', icon: 'none' })
+  uni.showToast({ title: '会员购买暂未开放', icon: 'none' })
 }
 
 function onMetricTap(item: (typeof metricItems)[number]) {
@@ -321,6 +327,20 @@ function onMetricTap(item: (typeof metricItems)[number]) {
     uni.navigateTo({ url: '/packageGoods/manage/manage' })
   }
 }
+
+function onSettleEntry() {
+  uni.navigateTo({ url: '/pages/settle/settle' })
+}
+
+onMounted(async () => {
+  const me = await ensureLogin()
+  if (!me) return
+  profile.value = me
+  displayName.value = me.nickname || displayName.value
+  displayId.value = String(me.id || displayId.value)
+  displayBio.value = me.bio || displayBio.value
+  if (me.avatar) displayAvatar.value = me.avatar
+})
 </script>
 
 <style scoped>

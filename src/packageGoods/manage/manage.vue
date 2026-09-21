@@ -127,23 +127,24 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useNavBar } from '@/composables/useNavBar'
+import { categoryApi, listingApi, ListingSaleStatus, type ListingItem } from '@/api'
 
 const { statusBarHeight, navBarHeight, menuRight } = useNavBar()
 
 const statusIndex = ref(0)
 const categoryIndex = ref(0)
 
-const statusTabs = [
-  { key: 'all', label: '全部', count: 128 },
-  { key: 'on', label: '上架中', count: 86 },
-  { key: 'off', label: '已下架', count: 22 },
-  { key: 'audit', label: '审核中', count: 12 },
-  { key: 'fail', label: '审核失败', count: 8 },
-]
+const statusTabs = ref([
+  { key: 'all', label: '全部', count: 0 },
+  { key: 'on', label: '上架中', count: 0 },
+  { key: 'off', label: '已下架', count: 0 },
+  { key: 'audit', label: '审核中', count: 0 },
+  { key: 'fail', label: '审核失败', count: 0 },
+])
 
-const categories = [
+const categories = ref<string[]>([
   '全部商品',
   '软件应用',
   '游戏娱乐',
@@ -153,7 +154,7 @@ const categories = [
   '生活服务',
   '电商购物',
   '企业服务',
-]
+])
 
 type ProductStatus = 'on' | 'off' | 'audit' | 'fail'
 
@@ -170,7 +171,7 @@ interface ProductItem {
   variant?: 'game'
 }
 
-const products: ProductItem[] = [
+const products = ref<ProductItem[]>([
   {
     id: '1',
     name: '高效待办清单Pro',
@@ -238,16 +239,68 @@ const products: ProductItem[] = [
     category: '游戏娱乐',
     variant: 'game',
   },
-]
+])
 
 const filteredProducts = computed(() => {
-  const tab = statusTabs[statusIndex.value]
-  const cat = categories[categoryIndex.value]
-  return products.filter((p) => {
+  const tab = statusTabs.value[statusIndex.value]
+  const cat = categories.value[categoryIndex.value]
+  return products.value.filter((p) => {
     const statusOk = tab.key === 'all' || p.status === tab.key
     const catOk = cat === '全部商品' || p.category === cat
     return statusOk && catOk
   })
+})
+
+function recount() {
+  const list = products.value
+  statusTabs.value = statusTabs.value.map((tab) => ({
+    ...tab,
+    count:
+      tab.key === 'all' ? list.length : list.filter((p) => p.status === tab.key).length,
+  }))
+}
+
+function mapListing(item: ListingItem): ProductItem {
+  const sale = Number(item.sale_status ?? 0)
+  let status: ProductStatus = 'audit'
+  if (sale === ListingSaleStatus.OnSale) status = 'on'
+  else if (sale === ListingSaleStatus.Offline || sale === ListingSaleStatus.Draft) status = 'off'
+  else if (sale === ListingSaleStatus.Pending) status = 'audit'
+  else if (sale === ListingSaleStatus.Rejected) status = 'fail'
+
+  const labels: Record<ProductStatus, string> = {
+    on: '上架中',
+    off: '已下架',
+    audit: '审核中',
+    fail: '审核失败',
+  }
+  return {
+    id: String(item.id),
+    name: item.title || item.name || '',
+    desc: item.intro || item.desc || item.product?.name || '',
+    price: String(item.price ?? ''),
+    sales: String(item.sales ?? item.view_count ?? 0),
+    cover: item.cover || item.images?.[0] || item.product?.logo || '../static/manage/cover-todo.png',
+    status,
+    statusLabel: item.status_label || labels[status],
+    category: item.category?.name || item.category_name || '全部商品',
+  }
+}
+
+onMounted(async () => {
+  const { ensureLogin } = await import('@/api')
+  await ensureLogin()
+  const [cats, list] = await Promise.all([
+    categoryApi.listSilent(),
+    listingApi.mineSilent({ limit: 100 }),
+  ])
+  if (cats?.length) {
+    categories.value = ['全部商品', ...cats.map((c) => c.name)]
+  }
+  if (list?.length) {
+    products.value = list.map(mapListing)
+  }
+  recount()
 })
 
 function goBack() {
@@ -255,19 +308,39 @@ function goBack() {
 }
 
 function onEdit() {
-  uni.showToast({ title: '编辑', icon: 'none' })
+  const first = filteredProducts.value[0]
+  if (!first) {
+    uni.showToast({ title: '暂无商品', icon: 'none' })
+    return
+  }
+  uni.navigateTo({
+    url: `/packageGoods/publish/publish?id=${encodeURIComponent(first.id)}`,
+  })
 }
 
-function onMore(_item: ProductItem) {
-  uni.showToast({ title: '更多操作', icon: 'none' })
+function onMore(item: ProductItem) {
+  uni.showActionSheet({
+    itemList: ['编辑', '查看详情'],
+    success: (res) => {
+      if (res.tapIndex === 0) {
+        uni.navigateTo({
+          url: `/packageGoods/publish/publish?id=${encodeURIComponent(item.id)}`,
+        })
+      } else if (res.tapIndex === 1) {
+        uni.navigateTo({
+          url: `/packageGoods/detail/detail?id=${encodeURIComponent(item.id)}`,
+        })
+      }
+    },
+  })
 }
 
 function onManageCategory() {
-  uni.showToast({ title: '管理分类', icon: 'none' })
+  uni.navigateTo({ url: '/packageGoods/category/category' })
 }
 
 function onPublish() {
-  uni.showToast({ title: '发布商品', icon: 'none' })
+  uni.navigateTo({ url: '/packageGoods/publish/publish' })
 }
 </script>
 

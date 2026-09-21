@@ -168,12 +168,20 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
 import { useNavBar } from '@/composables/useNavBar'
+import {
+  categoryApi,
+  listingApi,
+  productApi,
+  type CategoryItem,
+  type ProductItem,
+} from '@/api'
 
 const { statusBarHeight, navBarHeight, menuRight, safeBottom } = useNavBar()
 
-const typeOptions = [
+const typeOptions = ref<string[]>([
   '零售商城',
   '餐饮外卖',
   '社交电商',
@@ -182,9 +190,8 @@ const typeOptions = [
   '知识付费',
   '游戏娱乐',
   '其他类型',
-]
-
-const libraryOptions = [
+])
+const libraryOptions = ref<string[]>([
   '多用户商城系统',
   '社交电商系统',
   '分销商城系统',
@@ -192,15 +199,69 @@ const libraryOptions = [
   '跨境电商系统',
   '外卖点餐系统',
   '同城配送系统',
-]
+])
+
+const categories = ref<CategoryItem[]>([])
+const products = ref<ProductItem[]>([])
+const editId = ref('')
+const submitting = ref(false)
 
 const form = reactive({
   type: '',
+  typeId: '' as string | number,
   library: '',
+  productId: '' as string | number,
   name: '',
   price: '',
   intro: '',
   images: [] as string[],
+})
+
+onLoad((q) => {
+  if (q?.id) editId.value = String(q.id)
+  if (q?.product_id) {
+    form.productId = String(q.product_id)
+  }
+  if (q?.product_name) {
+    form.library = decodeURIComponent(String(q.product_name))
+    if (!form.name) form.name = form.library
+  }
+})
+
+onMounted(async () => {
+  const [cats, prods] = await Promise.all([
+    categoryApi.listSilent(),
+    productApi.listSilent({ limit: 100 }),
+  ])
+  if (cats?.length) {
+    categories.value = cats
+    typeOptions.value = cats.map((c) => c.name)
+  }
+  if (prods?.length) {
+    products.value = prods
+    libraryOptions.value = prods.map((p) => p.name)
+    if (form.productId) {
+      const hit = prods.find((p) => String(p.id) === String(form.productId))
+      if (hit) {
+        form.library = hit.name
+        form.typeId = hit.category_id || hit.category?.id || ''
+        form.type = hit.category?.name || hit.category_name || form.type
+      }
+    }
+  }
+  if (editId.value) {
+    const detail = await listingApi.detailSilent(editId.value)
+    if (detail) {
+      form.name = detail.title || detail.name || ''
+      form.price = String(detail.price ?? '')
+      form.intro = detail.intro || detail.desc || ''
+      form.images = detail.images || (detail.cover ? [detail.cover] : [])
+      form.productId = detail.product_id
+      form.library = detail.product?.name || detail.product_name || form.library
+      form.typeId = detail.category_id || detail.category?.id || ''
+      form.type = detail.category?.name || detail.category_name || form.type
+    }
+  }
 })
 
 function goBack() {
@@ -210,19 +271,46 @@ function goBack() {
 }
 
 function pickType() {
+  if (!typeOptions.value.length) {
+    uni.showToast({ title: '分类暂不可用', icon: 'none' })
+    return
+  }
   uni.showActionSheet({
-    itemList: typeOptions,
+    itemList: typeOptions.value.slice(0, 6),
     success: (res) => {
-      form.type = typeOptions[res.tapIndex] || ''
+      form.type = typeOptions.value[res.tapIndex] || ''
+      const cat = categories.value[res.tapIndex]
+      form.typeId = cat?.id || ''
+      if (categories.value.length) {
+        form.library = ''
+        form.productId = ''
+      }
     },
   })
 }
 
 function pickLibrary() {
+  let list = products.value
+  if (form.typeId && list.length) {
+    list = list.filter((p) => String(p.category_id) === String(form.typeId))
+  }
+  const names = list.length ? list.map((p) => p.name) : libraryOptions.value
+  if (!names.length) {
+    uni.showToast({ title: '坑位库暂无数据，请稍后', icon: 'none' })
+    return
+  }
   uni.showActionSheet({
-    itemList: libraryOptions,
+    itemList: names.slice(0, 6),
     success: (res) => {
-      form.library = libraryOptions[res.tapIndex] || ''
+      const name = names[res.tapIndex] || ''
+      form.library = name
+      const prod = list.find((p) => p.name === name) || products.value.find((p) => p.name === name)
+      form.productId = prod?.id || ''
+      if (prod?.category_name && !form.type) {
+        form.type = prod.category_name
+        form.typeId = prod.category_id || ''
+      }
+      if (!form.name.trim()) form.name = name
     },
   })
 }
@@ -253,6 +341,10 @@ function validate(requireAll = true) {
     uni.showToast({ title: '请选择关联坑位库', icon: 'none' })
     return false
   }
+  if (products.value.length > 0 && !form.productId) {
+    uni.showToast({ title: '请选择有效的坑位库商品', icon: 'none' })
+    return false
+  }
   if (!form.name.trim()) {
     uni.showToast({ title: '请输入商品名称', icon: 'none' })
     return false
@@ -272,22 +364,72 @@ function validate(requireAll = true) {
   return true
 }
 
-function onSaveDraft() {
+function buildPayload(submit: boolean) {
+  return {
+    product_id: form.productId,
+    category_id: form.typeId || undefined,
+    title: form.name.trim(),
+    price: form.price.trim(),
+    intro: form.intro.trim(),
+    images: form.images,
+    submit,
+  }
+}
+
+async function onSaveDraft() {
   if (!form.name.trim() && !form.type && !form.library) {
     uni.showToast({ title: '请至少填写部分信息', icon: 'none' })
     return
   }
-  uni.showToast({ title: '已存为草稿', icon: 'success' })
+  if (!form.productId) {
+    uni.showToast({ title: '草稿需先关联坑位库', icon: 'none' })
+    return
+  }
+  if (submitting.value) return
+  submitting.value = true
+  try {
+    const { ensureLogin } = await import('@/api')
+    await ensureLogin()
+    if (editId.value) {
+      await listingApi.update(editId.value, { ...buildPayload(false), as_draft: true })
+    } else {
+      await listingApi.create(buildPayload(false))
+    }
+    uni.showToast({ title: '已存为草稿', icon: 'success' })
+  } catch {
+    uni.showToast({ title: '草稿接口暂未就绪，已本地校验', icon: 'none' })
+  } finally {
+    submitting.value = false
+  }
 }
 
-function onPublish() {
+async function onPublish() {
   if (!validate(true)) return
-  uni.showToast({ title: '发布成功', icon: 'success' })
-  setTimeout(() => {
-    uni.navigateBack({
-      fail: () => uni.switchTab({ url: '/pages/index/index' }),
+  if (submitting.value) return
+  submitting.value = true
+  try {
+    const { ensureLogin } = await import('@/api')
+    await ensureLogin()
+    if (editId.value) {
+      await listingApi.update(editId.value, buildPayload(true))
+    } else {
+      await listingApi.create(buildPayload(true))
+    }
+    uni.showToast({ title: '发布成功', icon: 'success' })
+    setTimeout(() => {
+      uni.navigateBack({
+        fail: () => uni.switchTab({ url: '/pages/index/index' }),
+      })
+    }, 1200)
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : '发布失败'
+    uni.showToast({
+      title: msg.includes('尚未') || msg.includes('入驻') ? '请先完成商家入驻' : '发布接口暂未就绪',
+      icon: 'none',
     })
-  }, 1200)
+  } finally {
+    submitting.value = false
+  }
 }
 </script>
 

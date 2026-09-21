@@ -140,7 +140,7 @@
     <!-- 底部操作栏 -->
     <view class="bottom-bar" :style="{ paddingBottom: safeBottom + 'px' }">
       <view class="bottom-actions">
-        <view class="side-action">
+        <view class="side-action" @click="onConsult">
           <image class="side-icon" src="../static/detail/icon-service.png" mode="aspectFit" />
           <text class="side-text">客服</text>
         </view>
@@ -148,10 +148,10 @@
           <image class="side-icon" src="../static/detail/icon-store.png" mode="aspectFit" />
           <text class="side-text">店铺</text>
         </view>
-        <view class="btn-sell">
+        <view class="btn-sell" @click="onSellSame">
           <text class="btn-sell-text">卖同款</text>
         </view>
-        <view class="btn-buy">
+        <view class="btn-buy" @click="onBuy">
           <text class="btn-buy-text">立即购买</text>
         </view>
       </view>
@@ -163,18 +163,22 @@
 import { ref, reactive } from 'vue'
 import { onLoad, onShareAppMessage } from '@dcloudio/uni-app'
 import { useNavBar } from '@/composables/useNavBar'
+import { ensureLogin, listingApi, messageApi } from '@/api'
 
 const { statusBarHeight, navBarHeight, menuRight, safeBottom } = useNavBar()
 const bannerIndex = ref(0)
 const tabIndex = ref(0)
+const listingId = ref('')
+const productId = ref('')
+const merchantId = ref('')
 
-const banners = [
+const banners = ref([
   '../static/detail/banner.png',
   '../static/detail/banner.png',
   '../static/detail/banner.png',
   '../static/detail/banner.png',
   '../static/detail/banner.png',
-]
+])
 
 const detail = reactive({
   title: 'EweiShop商城系统坑位',
@@ -243,30 +247,79 @@ const goBack = () => {
 }
 
 const openShop = () => {
-  uni.navigateTo({
-    url: `/packageGoods/shop/shop?name=${encodeURIComponent(detail.merchant.name)}&avatar=${encodeURIComponent(detail.merchant.avatar)}`,
-  })
+  const qs = [
+    merchantId.value ? `id=${encodeURIComponent(merchantId.value)}` : '',
+    `name=${encodeURIComponent(detail.merchant.name)}`,
+    `avatar=${encodeURIComponent(detail.merchant.avatar)}`,
+  ].filter(Boolean).join('&')
+  uni.navigateTo({ url: `/packageGoods/shop/shop?${qs}` })
 }
 
-onLoad((query) => {
-  if (query?.name) {
-    detail.merchant.name = decodeURIComponent(query.name)
+async function onConsult() {
+  await ensureLogin()
+  try {
+    const thread = await messageApi.open({
+      type: 2,
+      subject_type: 'listing',
+      subject_id: listingId.value || undefined,
+      peer_id: merchantId.value || undefined,
+      title: `咨询·${detail.title}`,
+    })
+    uni.navigateTo({
+      url: `/pages/message/thread?id=${encodeURIComponent(String(thread.id))}&title=${encodeURIComponent(thread.title || '咨询')}`,
+    })
+  } catch {
+    uni.navigateTo({ url: '/pages/message/list' })
   }
-  if (query?.avatar) {
-    detail.merchant.avatar = decodeURIComponent(query.avatar)
-  }
-  if (query?.price) {
-    detail.price = decodeURIComponent(query.price)
-  }
-  if (query?.title) {
-    detail.title = decodeURIComponent(query.title)
+}
+
+function onSellSame() {
+  const qs = [
+    productId.value ? `product_id=${encodeURIComponent(productId.value)}` : '',
+    `product_name=${encodeURIComponent(detail.title)}`,
+  ].filter(Boolean).join('&')
+  uni.navigateTo({ url: `/packageGoods/publish/publish?${qs}` })
+}
+
+function onBuy() {
+  uni.showToast({ title: '购买功能暂未开放', icon: 'none' })
+}
+
+onLoad(async (query) => {
+  if (query?.id) listingId.value = String(query.id)
+  if (query?.name) detail.merchant.name = decodeURIComponent(query.name)
+  if (query?.avatar) detail.merchant.avatar = decodeURIComponent(query.avatar)
+  if (query?.price) detail.price = decodeURIComponent(query.price)
+  if (query?.title) detail.title = decodeURIComponent(query.title)
+
+  if (listingId.value) {
+    const data = await listingApi.detailSilent(listingId.value)
+    if (data) {
+      detail.title = data.title || data.name || detail.title
+      detail.subtitle = data.product?.summary || data.intro || detail.subtitle
+      detail.price = String(data.price ?? detail.price)
+      detail.intro = data.intro || data.desc || detail.intro
+      productId.value = String(data.product_id || data.product?.id || '')
+      if (data.merchant) {
+        merchantId.value = String(data.merchant.id || '')
+        detail.merchant.name = data.merchant.name
+        detail.merchant.avatar = data.merchant.logo || detail.merchant.avatar
+        detail.merchant.company = data.merchant.intro || detail.merchant.company
+        detail.merchant.deposit =
+          data.merchant.deposit_amount != null
+            ? `￥${data.merchant.deposit_amount}`
+            : detail.merchant.deposit
+      }
+      if (data.images?.length) banners.value = data.images
+      else if (data.cover) banners.value = [data.cover]
+    }
   }
 })
 
 // #ifdef MP-WEIXIN
 onShareAppMessage(() => ({
   title: detail.title,
-  path: `/packageGoods/detail/detail?title=${encodeURIComponent(detail.title)}&price=${encodeURIComponent(detail.price)}&name=${encodeURIComponent(detail.merchant.name)}`,
+  path: `/packageGoods/detail/detail?id=${encodeURIComponent(listingId.value)}&title=${encodeURIComponent(detail.title)}&price=${encodeURIComponent(detail.price)}&name=${encodeURIComponent(detail.merchant.name)}`,
 }))
 // #endif
 </script>

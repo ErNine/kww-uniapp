@@ -14,7 +14,7 @@
         <text class="brand-slogan">全国SaaS坑位信息查询与供需撮合平台</text>
       </view>
       <view class="search-wrap" :style="{ paddingRight: menuRight + 'px' }">
-        <view class="search-box">
+        <view class="search-box" @click="goSearch">
           <image class="search-icon" src="/static/merchant/icon-search.png" mode="aspectFit" />
           <text class="search-placeholder">搜索坑位商名称、软件名称、主营行业</text>
         </view>
@@ -151,43 +151,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useNavBar } from '@/composables/useNavBar'
+import { merchantApi, type MerchantItem as ApiMerchant } from '@/api'
 
 const { statusBarHeight, navBarHeight, menuRight } = useNavBar()
 const rankTabIndex = ref(0)
 
 const rankTabs = [
-  {
-    label: '推荐',
-    icon: '/static/merchant/tab-crown-active.png',
-    iconActive: '/static/merchant/tab-crown-active.png',
-  },
-  {
-    label: '销量榜',
-    icon: '/static/merchant/tab-chart.png',
-    iconActive: '/static/merchant/tab-chart.png',
-  },
-  {
-    label: '好评榜',
-    icon: '/static/merchant/tab-star.png',
-    iconActive: '/static/merchant/tab-star.png',
-  },
-  {
-    label: '保证金榜',
-    icon: '/static/merchant/tab-shield.png',
-    iconActive: '/static/merchant/tab-shield.png',
-  },
-  {
-    label: '认证商家',
-    icon: '/static/merchant/tab-cert.png',
-    iconActive: '/static/merchant/tab-cert.png',
-  },
+  { label: '推荐', icon: '/static/merchant/tab-crown-active.png', iconActive: '/static/merchant/tab-crown-active.png', sort: 'recommend' },
+  { label: '销量榜', icon: '/static/merchant/tab-chart.png', iconActive: '/static/merchant/tab-chart.png', sort: 'sales' },
+  { label: '好评榜', icon: '/static/merchant/tab-star.png', iconActive: '/static/merchant/tab-star.png', sort: 'rating' },
+  { label: '保证金榜', icon: '/static/merchant/tab-shield.png', iconActive: '/static/merchant/tab-shield.png', sort: 'deposit' },
+  { label: '认证商家', icon: '/static/merchant/tab-cert.png', iconActive: '/static/merchant/tab-cert.png', sort: 'certified' },
 ]
 
 const filterChips = ['综合排序', '保证金', '认证状态']
 
 interface MerchantItem {
+  id?: string | number
   name: string
   logo: string
   deposit: string
@@ -200,70 +182,53 @@ interface MerchantItem {
   rankNum?: string
 }
 
-const merchants: MerchantItem[] = [
-  {
-    name: '云创科技',
-    logo: '/static/merchant/logo-yunchuang.png',
-    deposit: '¥50,000',
-    business: '商城/ERP/OA/餐饮/教育',
-    sales: '128',
-    slots: '46',
-    rate: '98.6%',
-    years: '12',
-    rankType: 'top1',
-  },
-  {
-    name: '数智未来',
-    logo: '/static/merchant/logo-shuzhi.png',
-    deposit: '¥30,000',
-    business: '商城/教育/直播/生活',
-    sales: '96',
-    slots: '32',
-    rate: '97.2%',
-    years: '8',
-    rankType: 'top2',
-  },
-  {
-    name: '微享科技',
-    logo: '/static/merchant/logo-weixiang.png',
-    deposit: '¥20,000',
-    business: '餐饮/同城/社交/生活',
-    sales: '76',
-    slots: '25',
-    rate: '96.8%',
-    years: '6',
-    rankType: 'top3',
-  },
-  {
-    name: '创想软件',
-    logo: '/static/merchant/logo-chuangxiang.png',
-    deposit: '¥10,000',
-    business: '零育/电商/供应链/物业',
-    sales: '58',
-    slots: '18',
-    rate: '95.6%',
-    years: '5',
-    rankType: 'plain',
-    rankNum: '4',
-  },
-  {
-    name: '红川科技',
-    logo: '/static/merchant/logo-hongchuan.png',
-    deposit: '¥10,000',
-    business: '教育/知识付费/企服/工具',
-    sales: '42',
-    slots: '15',
-    rate: '94.3%',
-    years: '4',
-    rankType: 'plain',
-    rankNum: '5',
-  },
+const mockMerchants: MerchantItem[] = [
+  { name: '云创科技', logo: '/static/merchant/logo-yunchuang.png', deposit: '¥50,000', business: '商城/ERP/OA/餐饮/教育', sales: '128', slots: '46', rate: '98.6%', years: '12', rankType: 'top1' },
+  { name: '数智未来', logo: '/static/merchant/logo-shuzhi.png', deposit: '¥30,000', business: '商城/教育/直播/生活', sales: '96', slots: '32', rate: '97.2%', years: '8', rankType: 'top2' },
+  { name: '微享科技', logo: '/static/merchant/logo-weixiang.png', deposit: '¥20,000', business: '餐饮/同城/社交/生活', sales: '76', slots: '25', rate: '96.8%', years: '6', rankType: 'top3' },
+  { name: '创想软件', logo: '/static/merchant/logo-chuangxiang.png', deposit: '¥10,000', business: '零育/电商/供应链/物业', sales: '58', slots: '18', rate: '95.6%', years: '5', rankType: 'plain', rankNum: '4' },
+  { name: '红川科技', logo: '/static/merchant/logo-hongchuan.png', deposit: '¥10,000', business: '教育/知识付费/企服/工具', sales: '42', slots: '15', rate: '94.3%', years: '4', rankType: 'plain', rankNum: '5' },
 ]
 
+const merchants = ref<MerchantItem[]>([...mockMerchants])
+
+function mapMerchant(item: ApiMerchant, idx: number): MerchantItem {
+  const rankType = idx === 0 ? 'top1' : idx === 1 ? 'top2' : idx === 2 ? 'top3' : 'plain'
+  return {
+    id: item.id,
+    name: item.name,
+    logo: item.logo || item.avatar || '/static/merchant/logo-yunchuang.png',
+    deposit: item.deposit_amount != null ? `¥${item.deposit_amount}` : '¥0',
+    business: item.industry_category?.name || item.intro || item.business || '',
+    sales: String(item.sales_proxy ?? item.sales ?? 0),
+    slots: String(item.listing_count ?? item.slots ?? 0),
+    rate: item.rating_score != null ? `${item.rating_score}` : (item.rate || '-'),
+    years: String(item.years ?? '-'),
+    rankType,
+    rankNum: rankType === 'plain' ? String(idx + 1) : undefined,
+  }
+}
+
+async function loadMerchants() {
+  const sort = rankTabs[rankTabIndex.value]?.sort
+  const list = await merchantApi.listSilent({ sort, limit: 20 })
+  if (list?.length) merchants.value = list.map(mapMerchant)
+}
+
+onMounted(() => { void loadMerchants() })
+watch(rankTabIndex, () => { void loadMerchants() })
+
+function goSearch() {
+  uni.navigateTo({ url: '/pages/search/search' })
+}
+
 function openShop(item: MerchantItem) {
-  uni.navigateTo({
-    url: `/packageGoods/shop/shop?name=${encodeURIComponent(item.name)}&avatar=${encodeURIComponent(item.logo)}`,
-  })
+  const qs = [
+    item.id ? `id=${encodeURIComponent(String(item.id))}` : '',
+    `name=${encodeURIComponent(item.name)}`,
+    `avatar=${encodeURIComponent(item.logo)}`,
+  ].filter(Boolean).join('&')
+  uni.navigateTo({ url: `/packageGoods/shop/shop?${qs}` })
 }
 </script>
 

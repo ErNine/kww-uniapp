@@ -28,7 +28,7 @@
         <image class="notice-icon" src="/static/home/icon-notice.png" mode="aspectFit" />
         <text class="notice-label">公告</text>
         <view class="notice-divider" />
-        <text class="notice-text">平台严打虚假信息，交易更安全，合作更放心!</text>
+        <text class="notice-text">{{ noticeText }}</text>
         <text class="notice-arrow">›</text>
       </view>
 
@@ -98,7 +98,7 @@
               v-for="(item, idx) in retailHot"
               :key="item.name"
               class="hot-item"
-              @tap="openGoodsList(item.name)"
+              @tap="openGoodsList(item.name, item.id)"
             >
               <view class="rank" :class="'rank-' + (idx + 1)">
                 <text class="rank-text">{{ idx + 1 }}</text>
@@ -118,7 +118,7 @@
               v-for="(item, idx) in foodHot"
               :key="item.name"
               class="hot-item"
-              @tap="openGoodsList(item.name)"
+              @tap="openGoodsList(item.name, item.id)"
             >
               <view class="rank" :class="'rank-' + (idx + 1)">
                 <text class="rank-text">{{ idx + 1 }}</text>
@@ -227,7 +227,7 @@
             v-for="item in newProducts"
             :key="item.name"
             class="new-item"
-            @tap="openGoodsList(item.name)"
+            @tap="openGoodsList(item.name, item.id)"
           >
             <image class="new-icon" :src="item.icon" mode="aspectFit" />
             <text class="new-name">{{ item.name }}</text>
@@ -290,18 +290,23 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useNavBar } from '@/composables/useNavBar'
 import { NEWS_LIST, type NewsItem } from '@/pages/news/data'
+import { portalApi, type ArticleItem, type MerchantItem, type ProductItem } from '@/api'
 
 const { statusBarHeight, navBarHeight, menuRight } = useNavBar()
 const merchantTabIndex = ref(0)
 const newsTabIndex = ref(0)
+const noticeText = ref('平台严打虚假信息，交易更安全，合作更放心!')
+const homeNews = ref<NewsItem[]>([...NEWS_LIST])
+const fromApi = ref(false)
 
 type CategoryItem = {
   name: string
   icon: string
   tabUrl?: string
+  pageUrl?: string
   action?: 'toast'
   toast?: string
 }
@@ -310,13 +315,17 @@ const categories: CategoryItem[] = [
   { name: '坑位榜', icon: '/static/home/cat-rank.png', tabUrl: '/pages/rank/rank' },
   { name: '坑位商', icon: '/static/home/cat-merchant.png', tabUrl: '/pages/merchant/merchant' },
   { name: '互助大厅', icon: '/static/home/cat-order.png', tabUrl: '/pages/order/order' },
-  { name: '案例库', icon: '/static/home/cat-case.png', action: 'toast', toast: '案例库即将上线' },
-  { name: '申请收录', icon: '/static/home/cat-apply.png', action: 'toast', toast: '申请收录即将上线' },
+  { name: '案例库', icon: '/static/home/cat-case.png', pageUrl: '/pages/case/list' },
+  { name: '申请收录', icon: '/static/home/cat-apply.png', pageUrl: '/pages/inclusion/apply' },
 ]
 
 function onCategoryTap(item: CategoryItem) {
   if (item.tabUrl) {
     uni.switchTab({ url: item.tabUrl })
+    return
+  }
+  if (item.pageUrl) {
+    uni.navigateTo({ url: item.pageUrl })
     return
   }
   if (item.action === 'toast') {
@@ -333,11 +342,14 @@ function goMerchant() {
 }
 
 function onSearch() {
-  uni.showToast({ title: '搜索功能即将上线', icon: 'none' })
+  uni.navigateTo({ url: '/pages/search/search' })
 }
 
 function onNotice() {
-  uni.showToast({ title: '平台严打虚假信息，交易更安全', icon: 'none' })
+  uni.showToast({
+    title: noticeText.value || '平台严打虚假信息，交易更安全',
+    icon: 'none',
+  })
 }
 
 function onPublish() {
@@ -345,25 +357,35 @@ function onPublish() {
 }
 
 function onSettle() {
-  uni.showToast({ title: '坑位商入驻即将上线', icon: 'none' })
+  uni.navigateTo({ url: '/pages/settle/settle' })
 }
 
-function openGoodsList(name: string) {
+function openGoodsList(name: string, id?: string | number) {
+  const qs = id
+    ? `id=${encodeURIComponent(String(id))}&name=${encodeURIComponent(name)}`
+    : `name=${encodeURIComponent(name)}`
   uni.navigateTo({
-    url: `/packageGoods/list/list?name=${encodeURIComponent(name)}`,
+    url: `/packageGoods/list/list?${qs}`,
   })
 }
 
-function openShop(item: { name: string; logo: string }) {
+function openShop(item: { id?: string | number; name: string; logo: string }) {
+  const qs = [
+    item.id ? `id=${encodeURIComponent(String(item.id))}` : '',
+    `name=${encodeURIComponent(item.name)}`,
+    `avatar=${encodeURIComponent(item.logo)}`,
+  ]
+    .filter(Boolean)
+    .join('&')
   uni.navigateTo({
-    url: `/packageGoods/shop/shop?name=${encodeURIComponent(item.name)}&avatar=${encodeURIComponent(item.logo)}`,
+    url: `/packageGoods/shop/shop?${qs}`,
   })
 }
 
 function openNews(item?: NewsItem) {
-  const id = item?.id || NEWS_LIST[0]?.id || '1'
+  const id = item?.id || homeNews.value[0]?.id || '1'
   uni.navigateTo({
-    url: `/pages/news/detail?id=${encodeURIComponent(id)}`,
+    url: `/pages/news/detail?id=${encodeURIComponent(String(id))}`,
   })
 }
 
@@ -371,25 +393,37 @@ function openNewsList() {
   uni.navigateTo({ url: '/pages/news/list' })
 }
 
-const retailHot = [
+type HotItem = { id?: string | number; name: string; heat: string }
+type MerchantRow = {
+  id?: string | number
+  name: string
+  logo: string
+  score: number
+  auth: string
+  deposit: string
+  popularity: string
+}
+type NewProductRow = { id?: string | number; name: string; desc: string; icon: string }
+
+const retailHot = ref<HotItem[]>([
   { name: '多用户商城系统', heat: '9.9w' },
   { name: '社交电商系统', heat: '8.7w' },
   { name: '分销商城系统', heat: '7.1w' },
   { name: '小程序商城', heat: '6.3w' },
   { name: '跨境电商系统', heat: '5.2w' },
-]
+])
 
-const foodHot = [
+const foodHot = ref<HotItem[]>([
   { name: '外卖跑腿系统', heat: '9.6w' },
   { name: '餐饮点餐系统', heat: '8.2w' },
   { name: '外卖平台系统', heat: '6.7w' },
   { name: '同城配送系统', heat: '5.8w' },
   { name: '智慧餐厅系统', heat: '4.9w' },
-]
+])
 
 const merchantTabs = ['人气榜', '销量榜', '好评榜', '保证金榜']
 
-const merchants = [
+const merchants = ref<MerchantRow[]>([
   {
     name: '云创科技',
     logo: '/static/home/merchant-1.png',
@@ -430,7 +464,7 @@ const merchants = [
     deposit: '保证金￥5000',
     popularity: '4.2w',
   },
-]
+])
 
 const timeline = [
   { date: '05.20', status: '已上市', active: true },
@@ -439,20 +473,87 @@ const timeline = [
   { date: '06.10', status: '即将上市', active: false },
 ]
 
-const newProducts = [
+const newProducts = ref<NewProductRow[]>([
   { name: '多商户商城系统', desc: '零售商城', icon: '/static/home/new-card-1.png' },
   { name: '智能跑腿系统', desc: '跑腿代购', icon: '/static/home/new-card-2.png' },
   { name: '智慧物业系统', desc: '房产物业', icon: '/static/home/new-card-3.png' },
   { name: 'AI智能客服系统', desc: '人工智能', icon: '/static/home/new-card-4.png' },
-]
+])
 
 const newsTabs = ['全部', '平台动态', '行业趋势', '坑位干货', '成功案例']
-const newsList = NEWS_LIST
 
 const filteredNews = computed(() => {
   const tab = newsTabs[newsTabIndex.value]
-  if (!tab || tab === '全部') return newsList
-  return newsList.filter((item) => item.tags.includes(tab))
+  if (!tab || tab === '全部') return homeNews.value
+  return homeNews.value.filter((item) => item.tags.includes(tab))
+})
+
+function mapProductHot(items: ProductItem[]): HotItem[] {
+  return items.slice(0, 5).map((p) => ({
+    id: p.id,
+    name: p.name,
+    heat: String(p.hot_score ?? p.listing_count ?? p.heat ?? ''),
+  }))
+}
+
+function mapMerchant(items: MerchantItem[]): MerchantRow[] {
+  return items.slice(0, 5).map((m) => ({
+    id: m.id,
+    name: m.name,
+    logo: m.logo || m.avatar || '/static/home/merchant-1.png',
+    score: Number(m.rating_score ?? m.score ?? 5),
+    auth: m.is_certified ? '认证商家' : m.auth_label || '商家',
+    deposit: m.deposit_label || `保证金￥${m.deposit_amount ?? m.deposit ?? 0}`,
+    popularity: String(m.sales_proxy ?? m.popularity ?? ''),
+  }))
+}
+
+function mapArticle(items: ArticleItem[]): NewsItem[] {
+  return items.map((a) => ({
+    id: String(a.id),
+    title: a.title,
+    thumbTitle: a.thumb_title || a.title,
+    gradient: a.gradient || 'linear-gradient(135deg, #4F8CFF 0%, #2F5BFF 100%)',
+    tags: a.tags || [],
+    source: a.source || '坑位网官方',
+    time: a.time || String(a.published_at || ''),
+    views:
+      typeof a.view_count === 'number'
+        ? `${a.view_count}阅读`
+        : typeof a.views === 'number'
+          ? `${a.views}阅读`
+          : String(a.views || a.summary || ''),
+    paragraphs: a.paragraphs || (a.content ? [a.content] : a.summary ? [a.summary] : []),
+  }))
+}
+
+onMounted(async () => {
+  const data = await portalApi.homeSilent()
+  if (!data) return
+  fromApi.value = true
+  if (data.notices?.[0]?.title) {
+    noticeText.value = data.notices[0].title
+  }
+  const hot = data.hot_products || []
+  if (hot.length) {
+    const mid = Math.ceil(hot.length / 2)
+    retailHot.value = mapProductHot(hot.slice(0, mid))
+    foodHot.value = mapProductHot(hot.slice(mid))
+  }
+  if (data.hot_merchants?.length) {
+    merchants.value = mapMerchant(data.hot_merchants)
+  }
+  if (data.new_products?.length) {
+    newProducts.value = data.new_products.slice(0, 4).map((p, idx) => ({
+      id: p.id,
+      name: p.name,
+      desc: p.category?.name || p.category_name || p.summary || '',
+      icon: p.logo || p.cover || `/static/home/new-card-${(idx % 4) + 1}.png`,
+    }))
+  }
+  if (data.articles?.length) {
+    homeNews.value = mapArticle(data.articles)
+  }
 })
 </script>
 
