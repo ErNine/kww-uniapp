@@ -9,20 +9,24 @@
     <view class="content">
       <!-- 用户信息 -->
       <view class="profile">
-        <image class="avatar" src="/static/mine/avatar.png" mode="aspectFill" />
+        <image class="avatar" :src="displayAvatar" mode="aspectFill" />
         <view class="profile-main">
           <view class="name-row">
-            <text class="name">川仔</text>
+            <text class="name">{{ displayName }}</text>
             <view class="user-tag">
               <image class="user-tag-icon" src="/static/mine/icon-user-tag.png" mode="aspectFit" />
-              <text class="user-tag-text">普通用户</text>
+              <text class="user-tag-text">{{ roleText }}</text>
             </view>
           </view>
           <view class="id-row" @click="copyId">
-            <text class="user-id">ID:K20250818001</text>
+            <text class="user-id">ID:{{ displayId }}</text>
             <image class="copy-icon" src="/static/mine/icon-copy.png" mode="aspectFit" />
           </view>
-          <text class="bio">专注小程序开发，做有价值的产品</text>
+          <text class="bio">{{ displayBio }}</text>
+          <view class="switch-row" @click="onSwitchRole">
+            <text class="switch-text">切换身份 / 重新登录</text>
+            <text class="switch-arrow">›</text>
+          </view>
         </view>
       </view>
 
@@ -197,11 +201,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import { useNavBar } from '@/composables/useNavBar'
+import {
+  getRole,
+  goLoginPage,
+  isLoggedIn,
+  refreshProfile,
+  requireAuth,
+  roleLabel,
+  type UserProfile,
+} from '@/api'
 
 const { statusBarHeight, navBarHeight } = useNavBar()
 const balanceVisible = ref(true)
+const profile = ref<UserProfile | null>(null)
+const displayName = ref('未登录')
+const displayId = ref('-')
+const displayBio = ref('点击下方切换身份进行模拟登录')
+const displayAvatar = ref('/static/mine/avatar.png')
+const roleText = ref('未登录')
 
 const orderItems = [
   {
@@ -301,7 +321,7 @@ function toggleBalance() {
 
 function copyId() {
   uni.setClipboardData({
-    data: 'K20250818001',
+    data: displayId.value,
     success: () => {
       uni.showToast({ title: '已复制', icon: 'none' })
     },
@@ -309,18 +329,63 @@ function copyId() {
 }
 
 function onRecharge() {
-  uni.showToast({ title: '充值', icon: 'none' })
+  uni.showToast({ title: '充值功能暂未开放', icon: 'none' })
 }
 
 function onOpenMember() {
-  uni.showToast({ title: '开通会员', icon: 'none' })
+  uni.showToast({ title: '会员购买暂未开放', icon: 'none' })
 }
 
 function onMetricTap(item: (typeof metricItems)[number]) {
   if (item.sub === '在售商品') {
-    uni.navigateTo({ url: '/packageGoods/manage/manage' })
+    void requireAuth({
+      requireMerchant: true,
+      redirect: '/packageGoods/manage/manage',
+    }).then((me) => {
+      if (me) uni.navigateTo({ url: '/packageGoods/manage/manage' })
+    })
   }
 }
+
+function onSettleEntry() {
+  void requireAuth({ redirect: '/pages/settle/settle' }).then((me) => {
+    if (me) uni.navigateTo({ url: '/pages/settle/settle' })
+  })
+}
+
+function onSwitchRole() {
+  goLoginPage('/pages/mine/mine', false)
+}
+
+async function loadProfile() {
+  if (!isLoggedIn()) {
+    displayName.value = '未登录'
+    displayId.value = '-'
+    displayBio.value = '点击「切换身份」进行模拟登录'
+    roleText.value = '未登录'
+    return
+  }
+  const me = await refreshProfile()
+  if (!me) {
+    displayName.value = '未登录'
+    roleText.value = '未登录'
+    return
+  }
+  profile.value = me
+  displayName.value = me.nickname || displayName.value
+  displayId.value = String(me.id || displayId.value)
+  displayBio.value = me.bio || (getRole() === 'merchant' ? '当前为坑位商演示身份' : '当前为普通用户演示身份')
+  if (me.avatar) displayAvatar.value = me.avatar
+  roleText.value = roleLabel(getRole() || (me.merchant?.id ? 'merchant' : 'user'))
+}
+
+onShow(() => {
+  void loadProfile()
+})
+
+onMounted(() => {
+  void loadProfile()
+})
 </script>
 
 <style scoped>
@@ -438,6 +503,28 @@ function onMetricTap(item: (typeof metricItems)[number]) {
   font-size: 21rpx;
   color: #bddbfc;
   line-height: 1.3;
+}
+
+.switch-row {
+  margin-top: 18rpx;
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 10rpx 20rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.switch-text {
+  font-size: 22rpx;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.switch-arrow {
+  font-size: 28rpx;
+  color: #ffffff;
+  line-height: 1;
 }
 
 .wallet {

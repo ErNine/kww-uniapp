@@ -212,9 +212,11 @@
 import { ref, reactive } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { useNavBar } from '@/composables/useNavBar'
+import { listingApi, productApi } from '@/api'
 
 const { statusBarHeight, navBarHeight, menuRight } = useNavBar()
 const sortIndex = ref(0)
+const productId = ref('')
 
 const product = reactive({
   name: 'Eweishop商城',
@@ -230,7 +232,19 @@ const product = reactive({
 const sortTabs = ['点赞量', '价格', '保证金', '刷新时间']
 const sortChips = ['按点赞量排序', '按价格排序', '按保证金高低排序', '按刷新时间排序']
 
-const merchants = [
+type MerchantRow = {
+  id?: string
+  name: string
+  logo: string
+  auth: string
+  deposit: string
+  likes: number
+  slots: number
+  refresh: string
+  price: string
+}
+
+const merchants = ref<MerchantRow[]>([
   {
     name: '软件超人',
     logo: '../static/list/merchant-1.png',
@@ -271,7 +285,7 @@ const merchants = [
     refresh: '1天内',
     price: '158',
   },
-]
+])
 
 const goBack = () => {
   uni.navigateBack({
@@ -281,25 +295,62 @@ const goBack = () => {
   })
 }
 
-const openDetail = (item: { name: string; logo: string; price: string }) => {
-  uni.navigateTo({
-    url: `/packageGoods/detail/detail?name=${encodeURIComponent(item.name)}&avatar=${encodeURIComponent(item.logo)}&price=${encodeURIComponent(item.price)}`,
-  })
+const openDetail = (item: MerchantRow) => {
+  const qs = [
+    item.id ? `id=${encodeURIComponent(item.id)}` : '',
+    `name=${encodeURIComponent(item.name)}`,
+    `avatar=${encodeURIComponent(item.logo)}`,
+    `price=${encodeURIComponent(item.price)}`,
+    `title=${encodeURIComponent(product.name)}`,
+  ].filter(Boolean).join('&')
+  uni.navigateTo({ url: `/packageGoods/detail/detail?${qs}` })
 }
 
-onLoad((query) => {
-  if (query?.name) {
-    product.name = decodeURIComponent(query.name)
-  }
-  if (query?.logo) {
-    product.logo = decodeURIComponent(query.logo)
-  }
+onLoad(async (query) => {
+  if (query?.id) productId.value = String(query.id)
+  if (query?.name) product.name = decodeURIComponent(query.name)
+  if (query?.logo) product.logo = decodeURIComponent(query.logo)
   if (query?.price) {
     const raw = decodeURIComponent(query.price)
     const nums = raw.match(/\d+/g)
     if (nums && nums.length >= 2) {
       product.priceMin = nums[0]
       product.priceMax = nums[1]
+    }
+  }
+
+  if (productId.value) {
+    const detail = await productApi.detailSilent(productId.value)
+    if (detail) {
+      product.name = detail.name
+      product.logo = detail.logo || product.logo
+      product.desc = detail.summary || detail.intro || product.desc
+      product.sellers = Number(detail.listing_count ?? product.sellers)
+      product.views = String(detail.view_count ?? product.views)
+      if (detail.reference_price != null) {
+        product.priceMin = String(detail.reference_price)
+        product.priceMax = String(detail.reference_price)
+      }
+    }
+    const list = await listingApi.byProductSilent(productId.value, { limit: 30 })
+    if (list?.length) {
+      merchants.value = list.map((row) => ({
+        id: String(row.id),
+        name: row.merchant?.name || '坑位商',
+        logo: row.merchant?.logo || '../static/list/merchant-1.png',
+        auth: row.merchant?.is_certified ? '认证商家' : '商家',
+        deposit: row.merchant?.deposit_amount != null ? `${row.merchant.deposit_amount}元保证金` : '',
+        likes: Number(row.view_count ?? 0),
+        slots: 1,
+        refresh: '最近',
+        price: String(row.price ?? ''),
+      }))
+      product.sellers = list.length
+      const prices = list.map((x) => Number(x.price)).filter((n) => !Number.isNaN(n))
+      if (prices.length) {
+        product.priceMin = String(Math.min(...prices))
+        product.priceMax = String(Math.max(...prices))
+      }
     }
   }
 })

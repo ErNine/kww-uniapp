@@ -187,10 +187,12 @@
 import { ref, reactive } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { useNavBar } from '@/composables/useNavBar'
+import { listingApi, merchantApi } from '@/api'
 
 const { statusBarHeight, navBarHeight, menuRight } = useNavBar()
 const catIndex = ref(0)
 const sortIndex = ref(-1)
+const merchantId = ref('')
 
 const shop = reactive({
   name: '软件超人',
@@ -202,10 +204,21 @@ const shop = reactive({
   likes: '5680+',
 })
 
-const categories = ['全部', '商城系统', '多商户系统', '同城系统', '分销系统']
+const categories = ref(['全部'])
 const sortOptions = ['销量最高', '价格最低', '价格最高']
 
-const products = [
+type ProductRow = {
+  id?: string
+  title: string
+  desc: string
+  price: string
+  sold: string
+  thumb: string
+  logo: string
+  thumbLabel: string
+}
+
+const products = ref<ProductRow[]>([
   {
     title: 'EweiShop商城系统坑位',
     desc: '开源商城系统，支持多端小程序、H5、公众号、APP',
@@ -233,28 +246,58 @@ const products = [
     logo: '../static/shop/product-3-logo.png',
     thumbLabel: '同城系统',
   },
-]
+])
 
 const goBack = () => {
   uni.navigateBack({
     fail: () => {
-      uni.navigateTo({ url: '/packageGoods/detail/detail' })
+      uni.switchTab({ url: '/pages/merchant/merchant' })
     },
   })
 }
 
-const openDetail = (item: { title: string; price: string }) => {
-  uni.navigateTo({
-    url: `/packageGoods/detail/detail?title=${encodeURIComponent(item.title)}&price=${encodeURIComponent(item.price)}&name=${encodeURIComponent(shop.name)}&avatar=${encodeURIComponent(shop.avatar)}`,
-  })
+const openDetail = (item: ProductRow) => {
+  const qs = [
+    item.id ? `id=${encodeURIComponent(item.id)}` : '',
+    `title=${encodeURIComponent(item.title)}`,
+    `price=${encodeURIComponent(item.price)}`,
+    `name=${encodeURIComponent(shop.name)}`,
+    `avatar=${encodeURIComponent(shop.avatar)}`,
+  ].filter(Boolean).join('&')
+  uni.navigateTo({ url: `/packageGoods/detail/detail?${qs}` })
 }
 
-onLoad((query) => {
-  if (query?.name) {
-    shop.name = decodeURIComponent(query.name)
-  }
-  if (query?.avatar) {
-    shop.avatar = decodeURIComponent(query.avatar)
+onLoad(async (query) => {
+  if (query?.id) merchantId.value = String(query.id)
+  if (query?.name) shop.name = decodeURIComponent(query.name)
+  if (query?.avatar) shop.avatar = decodeURIComponent(query.avatar)
+
+  if (merchantId.value) {
+    const detail = await merchantApi.detailSilent(merchantId.value)
+    if (detail) {
+      shop.name = detail.name
+      shop.avatar = detail.logo || shop.avatar
+      shop.company = detail.intro || shop.company
+      shop.desc = detail.intro || shop.desc
+      shop.deposit = detail.deposit_amount != null ? String(detail.deposit_amount) : shop.deposit
+      shop.slots = String(detail.listing_count ?? shop.slots)
+    }
+    const list = await listingApi.byMerchantSilent(merchantId.value, { limit: 30 })
+    if (list?.length) {
+      products.value = list.map((row) => ({
+        id: String(row.id),
+        title: row.title || row.name || row.product?.name || '坑位商品',
+        desc: row.intro || row.product?.summary || '',
+        price: String(row.price ?? ''),
+        sold: `浏览${row.view_count ?? 0}`,
+        thumb: row.cover || row.images?.[0] || row.product?.logo || '../static/shop/product-1.png',
+        logo: row.product?.logo || '../static/shop/product-1-logo.png',
+        thumbLabel: row.category?.name || '坑位',
+      }))
+      shop.slots = String(list.length)
+      const cats = Array.from(new Set(list.map((r) => r.category?.name).filter(Boolean))) as string[]
+      if (cats.length) categories.value = ['全部', ...cats]
+    }
   }
 })
 </script>

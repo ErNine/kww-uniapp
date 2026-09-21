@@ -1,14 +1,19 @@
 <script setup lang="ts">
-import { onLaunch, onShow, onHide } from "@dcloudio/uni-app";
+import { onLaunch, onShow, onHide } from '@dcloudio/uni-app'
+import { isLoggedIn } from '@/api'
+
 onLaunch(() => {
-  console.log("App Launch");
-});
+  // 入口为登录页；已登录冷启动时由登录页自行跳过
+  if (!isLoggedIn()) {
+    // noop — pages.json 首屏即 login
+  }
+})
 onShow(() => {
-  console.log("App Show");
-});
+  // noop
+})
 onHide(() => {
-  console.log("App Hide");
-});
+  // noop
+})
 </script>
 <style>
 page {
@@ -25,7 +30,6 @@ uni-page-body {
 /* #endif */
 
 /* #ifdef MP-WEIXIN */
-/* 避免小程序端图片默认点击态、长按菜单干扰 */
 image {
   -webkit-touch-callout: none;
 }
