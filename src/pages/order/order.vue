@@ -47,7 +47,7 @@ import {
 } from '@/components/hall'
 import type { HallFilterOption, HallMessageItem } from '@/components/hall/types'
 import {
-  ensureLogin,
+  requireAuth,
   hallApi,
   HallContentType,
   messageApi,
@@ -121,7 +121,8 @@ function openCompose() {
 }
 
 async function onDm() {
-  await ensureLogin()
+  const me = await requireAuth({ redirect: '/pages/message/list' })
+  if (!me) return
   uni.navigateTo({ url: '/pages/message/list' })
 }
 
@@ -154,7 +155,6 @@ function mapPost(item: HallPostItem): HallMessageItem {
 }
 
 async function bootstrap() {
-  await ensureLogin()
   const products = await productApi.listSilent({ limit: 20 })
   if (products?.length) {
     softwareOptions.value = [
@@ -251,7 +251,8 @@ async function onComposeSend(payload: {
       : undefined
 
   try {
-    await ensureLogin()
+    const me = await requireAuth({ redirect: '/pages/order/order' })
+    if (!me) return
     const created = await hallApi.create({
       content_type: contentType,
       product_id: productId,

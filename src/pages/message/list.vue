@@ -58,7 +58,7 @@
 import { onUnmounted, ref } from 'vue'
 import { onHide, onShow } from '@dcloudio/uni-app'
 import { useNavBar } from '@/composables/useNavBar'
-import { ensureLogin, messageApi, type MessageThreadItem } from '@/api'
+import { requireAuth, messageApi, type MessageThreadItem } from '@/api'
 import { HALL_POLL_INTERVAL_MS } from '@/config/env'
 
 const { statusBarHeight, navBarHeight, menuRight } = useNavBar()
@@ -82,7 +82,8 @@ function goBack() {
 
 async function refresh() {
   loading.value = true
-  await ensureLogin()
+  const __me = await requireAuth({ redirect: '/pages/message/list' })
+  if (!__me) { loading.value = false; return }
   const list = await messageApi.threadsSilent({ page: 1, limit: 50 })
   loading.value = false
   if (list) {

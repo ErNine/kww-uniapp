@@ -22,3 +22,12 @@ export const HALL_POLL_INTERVAL_MS = Number(
 
 export const TOKEN_STORAGE_KEY = 'kww_client_token'
 export const USER_STORAGE_KEY = 'kww_client_user'
+export const ROLE_STORAGE_KEY = 'kww_client_role'
+
+/** 模拟登录固定 openid（与后端 MockIdentities 一致） */
+export const MOCK_OPENID = {
+  user: 'mock_user',
+  merchant: 'mock_merchant',
+} as const
+
+export type MockRole = keyof typeof MOCK_OPENID

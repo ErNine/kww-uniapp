@@ -293,7 +293,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useNavBar } from '@/composables/useNavBar'
 import { NEWS_LIST, type NewsItem } from '@/pages/news/data'
-import { portalApi, type ArticleItem, type MerchantItem, type ProductItem } from '@/api'
+import { portalApi, requireAuth, type ArticleItem, type MerchantItem, type ProductItem } from '@/api'
 
 const { statusBarHeight, navBarHeight, menuRight } = useNavBar()
 const merchantTabIndex = ref(0)
@@ -353,11 +353,18 @@ function onNotice() {
 }
 
 function onPublish() {
-  uni.navigateTo({ url: '/packageGoods/publish/publish' })
+  void requireAuth({
+    requireMerchant: true,
+    redirect: '/packageGoods/publish/publish',
+  }).then((me) => {
+    if (me) uni.navigateTo({ url: '/packageGoods/publish/publish' })
+  })
 }
 
 function onSettle() {
-  uni.navigateTo({ url: '/pages/settle/settle' })
+  void requireAuth({ redirect: '/pages/settle/settle' }).then((me) => {
+    if (me) uni.navigateTo({ url: '/pages/settle/settle' })
+  })
 }
 
 function openGoodsList(name: string, id?: string | number) {

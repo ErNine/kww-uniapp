@@ -1,5 +1,12 @@
-import { TOKEN_STORAGE_KEY, USER_STORAGE_KEY } from '@/config/env'
+import {
+  TOKEN_STORAGE_KEY,
+  USER_STORAGE_KEY,
+  ROLE_STORAGE_KEY,
+  type MockRole,
+} from '@/config/env'
 import type { UserProfile } from './types'
+
+export type { MockRole }
 
 export function getToken(): string {
   try {
@@ -43,7 +50,33 @@ export function setCachedUser(user: UserProfile | null) {
   uni.setStorageSync(USER_STORAGE_KEY, user)
 }
 
+export function getRole(): MockRole | '' {
+  try {
+    const role = uni.getStorageSync(ROLE_STORAGE_KEY)
+    return role === 'user' || role === 'merchant' ? role : ''
+  } catch {
+    return ''
+  }
+}
+
+export function setRole(role: MockRole | null) {
+  if (!role) {
+    try {
+      uni.removeStorageSync(ROLE_STORAGE_KEY)
+    } catch {
+      // ignore
+    }
+    return
+  }
+  uni.setStorageSync(ROLE_STORAGE_KEY, role)
+}
+
+export function isLoggedIn(): boolean {
+  return Boolean(getToken())
+}
+
 export function clearAuth() {
   clearToken()
   setCachedUser(null)
+  setRole(null)
 }

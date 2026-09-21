@@ -14,14 +14,46 @@ import type {
   UserProfile,
 } from './types'
 
-/** 登录：简化 openid / mobile（非真实微信换码） */
+/** 登录：联调 identity=user|merchant；或 openid/mobile */
 export const authApi = {
-  login: (data: { openid?: string; mobile?: string; nickname?: string; avatar?: string }) =>
-    post<{ token: string; member: UserProfile }>('/auth/login', data, { auth: false }),
-  me: () => get<UserProfile>('/auth/me'),
-  meSilent: () => requestSilent<UserProfile>({ url: '/auth/me' }),
+  login: (data: {
+    identity?: 'user' | 'merchant'
+    openid?: string
+    mobile?: string
+    nickname?: string
+    avatar?: string
+  }) =>
+    post<{
+      token: string
+      role: 'user' | 'merchant'
+      member: UserProfile
+      merchant?: MerchantItem | null
+    }>('/auth/login', data, { auth: false }),
+  mockAccounts: () =>
+    get<
+      Array<{
+        identity: string
+        openid: string
+        mobile: string
+        nickname: string
+        role: string
+      }>
+    >('/auth/mock-accounts', undefined, { auth: false }),
+  me: () =>
+    get<{ role: 'user' | 'merchant'; member: UserProfile; merchant?: MerchantItem | null }>(
+      '/auth/me',
+    ),
+  meSilent: () =>
+    requestSilent<{
+      role: 'user' | 'merchant'
+      member: UserProfile
+      merchant?: MerchantItem | null
+    }>({ url: '/auth/me' }),
   updateProfile: (data: { nickname?: string; avatar?: string; bio?: string }) =>
-    put<UserProfile>('/auth/profile', data),
+    put<{ role: string; member: UserProfile; merchant?: MerchantItem | null }>(
+      '/auth/profile',
+      data,
+    ),
 }
 
 /** 首页聚合 */

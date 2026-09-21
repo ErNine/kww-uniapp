@@ -288,8 +288,12 @@ function mapListing(item: ListingItem): ProductItem {
 }
 
 onMounted(async () => {
-  const { ensureLogin } = await import('@/api')
-  await ensureLogin()
+  const { requireAuth } = await import('@/api')
+  const me = await requireAuth({
+    requireMerchant: true,
+    redirect: '/packageGoods/manage/manage',
+  })
+  if (!me) return
   const [cats, list] = await Promise.all([
     categoryApi.listSilent(),
     listingApi.mineSilent({ limit: 100 }),

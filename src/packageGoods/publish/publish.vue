@@ -229,6 +229,12 @@ onLoad((q) => {
 })
 
 onMounted(async () => {
+  const { requireAuth } = await import('@/api')
+  const gate = await requireAuth({
+    requireMerchant: true,
+    redirect: '/packageGoods/publish/publish',
+  })
+  if (!gate) return
   const [cats, prods] = await Promise.all([
     categoryApi.listSilent(),
     productApi.listSilent({ limit: 100 }),
@@ -388,8 +394,12 @@ async function onSaveDraft() {
   if (submitting.value) return
   submitting.value = true
   try {
-    const { ensureLogin } = await import('@/api')
-    await ensureLogin()
+    const { requireAuth } = await import('@/api')
+    const me = await requireAuth({
+      requireMerchant: true,
+      redirect: '/packageGoods/publish/publish',
+    })
+    if (!me) return
     if (editId.value) {
       await listingApi.update(editId.value, { ...buildPayload(false), as_draft: true })
     } else {
@@ -408,8 +418,12 @@ async function onPublish() {
   if (submitting.value) return
   submitting.value = true
   try {
-    const { ensureLogin } = await import('@/api')
-    await ensureLogin()
+    const { requireAuth } = await import('@/api')
+    const me = await requireAuth({
+      requireMerchant: true,
+      redirect: '/packageGoods/publish/publish',
+    })
+    if (!me) return
     if (editId.value) {
       await listingApi.update(editId.value, buildPayload(true))
     } else {

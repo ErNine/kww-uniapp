@@ -94,6 +94,9 @@ const form = reactive({
 })
 
 onMounted(async () => {
+  const { requireAuth } = await import('@/api')
+  const gate = await requireAuth({ redirect: '/pages/settle/settle' })
+  if (!gate) return
   const list = await categoryApi.listSilent()
   categories.value = list || []
 })
@@ -139,8 +142,9 @@ async function onSubmit() {
 
   submitting.value = true
   try {
-    const { ensureLogin } = await import('@/api')
-    await ensureLogin({ nickname: form.contact.trim() })
+    const { requireAuth } = await import('@/api')
+    const me = await requireAuth({ redirect: '/pages/settle/settle' })
+    if (!me) return
     await merchantApi.apply({
       name: form.name.trim(),
       intro: form.intro.trim() || `${form.contact} ${form.mobile}`,

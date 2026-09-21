@@ -163,7 +163,7 @@
 import { ref, reactive } from 'vue'
 import { onLoad, onShareAppMessage } from '@dcloudio/uni-app'
 import { useNavBar } from '@/composables/useNavBar'
-import { ensureLogin, listingApi, messageApi } from '@/api'
+import { requireAuth, listingApi, messageApi } from '@/api'
 
 const { statusBarHeight, navBarHeight, menuRight, safeBottom } = useNavBar()
 const bannerIndex = ref(0)
@@ -256,7 +256,8 @@ const openShop = () => {
 }
 
 async function onConsult() {
-  await ensureLogin()
+  const __me = await requireAuth({ redirect: '/packageGoods/detail/detail' })
+  if (!__me) return
   try {
     const thread = await messageApi.open({
       type: 2,
@@ -273,12 +274,15 @@ async function onConsult() {
   }
 }
 
-function onSellSame() {
+async function onSellSame() {
   const qs = [
     productId.value ? `product_id=${encodeURIComponent(productId.value)}` : '',
     `product_name=${encodeURIComponent(detail.title)}`,
   ].filter(Boolean).join('&')
-  uni.navigateTo({ url: `/packageGoods/publish/publish?${qs}` })
+  const url = `/packageGoods/publish/publish?${qs}`
+  const me = await requireAuth({ requireMerchant: true, redirect: url })
+  if (!me) return
+  uni.navigateTo({ url })
 }
 
 function onBuy() {

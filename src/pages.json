@@ -1,6 +1,14 @@
 {
 	"pages": [
 		{
+			"path": "pages/login/login",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "模拟登录",
+				"backgroundColor": "#F5F7FB"
+			}
+		},
+		{
 			"path": "pages/index/index",
 			"style": {
 				"navigationStyle": "custom",
